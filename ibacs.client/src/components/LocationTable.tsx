@@ -1,7 +1,6 @@
 import { MapPin, Layers, Info, Trash2, Edit3, MoreVertical, Building } from 'lucide-react';
-import { Location } from '../api/locationService';
+import { type Location } from '../api/locationService';
 import { Button } from './UI/Button';
-import { cn } from './UI/Button';
 
 interface LocationTableProps {
   locations: Location[];
@@ -49,8 +48,8 @@ const LocationTable = ({ locations, loading }: LocationTableProps) => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {locations.map((loc) => (
-              <tr 
-                key={loc.locationKey} 
+              <tr
+                key={loc.locationKey}
                 className="group hover:bg-primary-50/30 transition-all duration-200 cursor-default"
               >
                 <td className="px-6 py-4">

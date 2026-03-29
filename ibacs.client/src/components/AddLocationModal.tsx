@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from './UI/Modal';
 import { Input } from './UI/Input';
 import { Button } from './UI/Button';
-import locationService, { Location, LocationType } from '../api/locationService';
+import locationService, { type Location, type LocationType } from '../api/locationService';
 import { MapPin, Info, Layers } from 'lucide-react';
 
 interface AddLocationModalProps {
@@ -104,7 +104,7 @@ const AddLocationModal = ({ isOpen, onClose, onSuccess }: AddLocationModalProps)
         <div className="bg-primary-50/50 p-4 rounded-xl border border-primary-100 flex gap-3 text-xs text-primary-700 leading-relaxed">
           <Info className="flex-shrink-0 mt-0.5" size={14} />
           <p>
-            Adding a location correctly establishes the hierarchy for your smart building. 
+            Adding a location correctly establishes the hierarchy for your smart building.
             Ensure the <strong>Parent Location</strong> is correctly set for rooms and floors.
           </p>
         </div>

@@ -18,32 +18,41 @@ namespace IBACS.Server
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
 
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
-
             // DbContext Registration
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            var app = builder.Build();
+            // Add Swagger services
+            builder.Services.AddSwaggerGen();
 
-            app.UseDefaultFiles();
-            app.MapStaticAssets();
+            // Add CORS services
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowReactApp",
+                    builder => builder.WithOrigins("http://localhost:5173")
+                                      .AllowAnyMethod()
+                                      .AllowAnyHeader());
+            });
+
+            var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI();
+                app.UseCors("AllowReactApp");
             }
-
-            app.UseHttpsRedirection();
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseAuthorization();
 
 
             app.MapControllers();
 
-            app.MapFallbackToFile("/index.html");
 
             app.Run();
         }

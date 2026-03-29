@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, RefreshCw, MapPin, Search, Filter } from 'lucide-react';
 import LocationTable from '../components/LocationTable';
 import AddLocationModal from '../components/AddLocationModal';
-import locationService, { Location } from '../api/locationService';
+import locationService, { type Location } from '../api/locationService';
 import { Button } from '../components/UI/Button';
 import { Input } from '../components/UI/Input';
 
@@ -16,7 +16,12 @@ const Locations = () => {
     setLoading(true);
     try {
       const data = await locationService.getLocations();
-      setLocations(data);
+      if (Array.isArray(data)) {
+        setLocations(data);
+      } else {
+        console.error('API did not return an array:', data);
+        setLocations([]);
+      }
     } catch (error) {
       console.error('Error fetching locations:', error);
     } finally {
@@ -28,7 +33,7 @@ const Locations = () => {
     fetchLocations();
   }, []);
 
-  const filteredLocations = locations.filter(loc => 
+  const filteredLocations = locations?.filter(loc =>
     loc.locationName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     loc.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -45,19 +50,19 @@ const Locations = () => {
           </div>
           <p className="text-slate-500 font-medium">Manage and organize your building hierarchy</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            onClick={fetchLocations} 
+          <Button
+            variant="outline"
+            onClick={fetchLocations}
             disabled={loading}
             className="hidden md:flex gap-2 font-bold"
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             Refresh
           </Button>
-          <Button 
-            onClick={() => setIsModalOpen(true)} 
+          <Button
+            onClick={() => setIsModalOpen(true)}
             className="flex-1 md:flex-none gap-2 px-6 py-4 rounded-xl shadow-xl shadow-primary-200 hover:shadow-2xl hover:shadow-primary-300 font-bold tracking-tight text-lg"
           >
             <Plus size={24} strokeWidth={3} />
@@ -69,8 +74,8 @@ const Locations = () => {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={18} />
-          <Input 
-            placeholder="Search by name or path..." 
+          <Input
+            placeholder="Search by name or path..."
             className="pl-12 h-12 rounded-xl bg-white border-slate-200 group-hover:border-primary-200 focus:ring-primary-500/20 text-base font-medium shadow-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -84,10 +89,10 @@ const Locations = () => {
 
       <LocationTable locations={filteredLocations} loading={loading} />
 
-      <AddLocationModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={fetchLocations} 
+      <AddLocationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchLocations}
       />
     </div>
   );
