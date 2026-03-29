@@ -5,9 +5,11 @@ import { Button } from './UI/Button';
 interface LocationTableProps {
   locations: Location[];
   loading: boolean;
+  onEdit: (location: Location) => void;
+  onDelete: (id: number) => void;
 }
 
-const LocationTable = ({ locations, loading }: LocationTableProps) => {
+const LocationTable = ({ locations, loading, onEdit, onDelete }: LocationTableProps) => {
   if (loading) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-dashed border-slate-200 animate-pulse transition-all">
@@ -76,17 +78,31 @@ const LocationTable = ({ locations, loading }: LocationTableProps) => {
                     <span className="text-slate-300 italic">None</span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-200">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-100 rounded-lg">
-                      <Edit3 size={16} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                  <div className="text-slate-300 group-hover:hidden translate-y-0 opacity-100 group-hover:opacity-0 group-hover:translate-y-4 transition-all duration-200">
-                    <MoreVertical size={16} className="mx-auto" />
+                <td className="px-6 py-4">
+                  <div className="relative h-8 flex items-center justify-end">
+                    {/* Hover Actions */}
+                    <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-100 rounded-lg transition-colors"
+                        onClick={() => onEdit(loc)}
+                      >
+                        <Edit3 size={16} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        onClick={() => onDelete(loc.locationKey!)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                    {/* Default Icon */}
+                    <div className="text-slate-300 opacity-100 group-hover:opacity-0 group-hover:-translate-y-2 transition-all duration-300">
+                      <MoreVertical size={16} />
+                    </div>
                   </div>
                 </td>
               </tr>

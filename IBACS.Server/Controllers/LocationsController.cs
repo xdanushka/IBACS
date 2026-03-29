@@ -48,6 +48,7 @@ namespace IBACS.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<Location>> PostLocation(Location location)
         {
+            location.FullName = await CalculateFullName(location);
             _context.Locations.Add(location);
             await _context.SaveChangesAsync();
 
@@ -63,7 +64,28 @@ namespace IBACS.Server.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(location).State = EntityState.Modified;
+            var existingLocation = await _context.Locations
+                .Include(l => l.ChildLocations)
+                .FirstOrDefaultAsync(l => l.LocationKey == id);
+
+            if (existingLocation == null)
+            {
+                return NotFound();
+            }
+
+            bool pathChanged = existingLocation.LocationName != location.LocationName || 
+                              existingLocation.ParentLocationKey != location.ParentLocationKey;
+
+            existingLocation.LocationName = location.LocationName;
+            existingLocation.LocationTypeKey = location.LocationTypeKey;
+            existingLocation.ParentLocationKey = location.ParentLocationKey;
+            
+            if (pathChanged)
+            {
+                existingLocation.FullName = await CalculateFullName(existingLocation);
+                // Also update all children recursively
+                await UpdateChildrenFullNames(existingLocation);
+            }
 
             try
             {
@@ -88,10 +110,27 @@ namespace IBACS.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLocation(int id)
         {
-            var location = await _context.Locations.FindAsync(id);
+            var location = await _context.Locations
+                .Include(l => l.ChildLocations)
+                .Include(l => l.Equipments)
+                .Include(l => l.Systems)
+                .FirstOrDefaultAsync(l => l.LocationKey == id);
+
             if (location == null)
             {
                 return NotFound();
+            }
+
+            // Validate: No Child Locations
+            if (location.ChildLocations.Any())
+            {
+                return BadRequest(new { message = "Cannot delete this location because it contains sub-locations (children). Please delete or move the sub-locations first." });
+            }
+
+            // Validate: No Equipment or Systems
+            if (location.Equipments.Any() || location.Systems.Any())
+            {
+                return BadRequest(new { message = "Cannot delete this location because it has equipment or systems assigned to it. Please remove them first." });
             }
 
             _context.Locations.Remove(location);
@@ -103,6 +142,35 @@ namespace IBACS.Server.Controllers
         private bool LocationExists(int id)
         {
             return _context.Locations.Any(e => e.LocationKey == id);
+        }
+
+        private async Task<string> CalculateFullName(Location location)
+        {
+            if (location.ParentLocationKey == null)
+            {
+                return location.LocationName;
+            }
+
+            var parent = await _context.Locations.FindAsync(location.ParentLocationKey);
+            if (parent == null)
+            {
+                return location.LocationName;
+            }
+
+            return $"{parent.FullName}. {location.LocationName}";
+        }
+
+        private async Task UpdateChildrenFullNames(Location parent)
+        {
+            var children = await _context.Locations
+                .Where(l => l.ParentLocationKey == parent.LocationKey)
+                .ToListAsync();
+
+            foreach (var child in children)
+            {
+                child.FullName = $"{parent.FullName}. {child.LocationName}";
+                await UpdateChildrenFullNames(child); // Recurse
+            }
         }
     }
 }

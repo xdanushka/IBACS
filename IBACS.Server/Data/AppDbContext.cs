@@ -29,6 +29,11 @@ namespace IBACS.Server.Data
                 .HasForeignKey(l => l.ParentLocationKey)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Configure unique index for LocationType Name
+            modelBuilder.Entity<LocationType>()
+                .HasIndex(lt => lt.Name)
+                .IsUnique();
+
             // Configure Many-to-Many relationship (Explicit Join Table)
             modelBuilder.Entity<SystemPoint>()
                 .HasOne(sp => sp.SystemModel)
