@@ -1,121 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Dashboard from './pages/Dashboard';
+import Locations from './pages/Locations';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <Router>
+      <div className="min-h-screen bg-slate-50/50 selection:bg-primary-100 selection:text-primary-900 overflow-x-hidden">
+        <Navbar />
+        
+        <main className="max-w-7xl mx-auto px-6 py-10 md:py-16">
+          <div className="relative">
+            {/* Background Decorative Element */}
+            <div className="absolute top-0 right-0 -mr-32 -mt-32 w-96 h-96 bg-primary-100/30 rounded-full blur-3xl -z-10" />
+            <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl -z-10" />
+            
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/locations" element={<Locations />} />
+            </Routes>
+          </div>
+        </main>
+        
+        <footer className="max-w-7xl mx-auto px-6 py-12 border-t border-slate-100">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-bold text-slate-900 tracking-tight">IBACS System</p>
+              <p className="text-xs text-slate-400 font-medium tracking-wide">© 2026 Intelligent Building Automation && Control System</p>
+            </div>
+            <div className="flex items-center gap-6">
+              <a href="#" className="text-xs font-bold text-slate-400 hover:text-primary-600 transition-colors uppercase tracking-widest leading-none">Documentation</a>
+              <a href="#" className="text-xs font-bold text-slate-400 hover:text-primary-600 transition-colors uppercase tracking-widest leading-none">Support</a>
+              <a href="#" className="text-xs font-bold text-slate-400 hover:text-primary-600 transition-colors uppercase tracking-widest leading-none">Privacy</a>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </Router>
+  );
 }
 
-export default App
+export default App;
