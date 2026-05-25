@@ -9,6 +9,7 @@ namespace IBACS.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
 
             // Add services to the container.
 
@@ -34,19 +35,23 @@ namespace IBACS.Server
                                       .AllowAnyHeader());
             });
 
-            var app = builder.Build();
+           
+var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-                app.UseCors("AllowReactApp");
-            }
-            else
-            {
-                app.UseHttpsRedirection();
-            }
+
+app.UseCors("AllowReactApp");
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseHttpsRedirection();
+}
+
 
             app.UseAuthorization();
 
