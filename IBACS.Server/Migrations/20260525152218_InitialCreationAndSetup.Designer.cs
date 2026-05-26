@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBACS.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260426180829_AddNewChanges")]
-    partial class AddNewChanges
+    [Migration("20260525152218_InitialCreationAndSetup")]
+    partial class InitialCreationAndSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

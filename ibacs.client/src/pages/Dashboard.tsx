@@ -1,76 +1,142 @@
-import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Dashboard.css';
+import { EquipmentManager } from '../components/EquipmentManager';
+import { LocationTree } from '../components/LocationTree';
 
-interface DashboardStats {
-  totalLocations: number;
+interface LocationItem {
+  locationKey: number;
+  locationName: string;
+  fullName: string;
+  parentLocationKey: number | null;
 }
 
-interface ChartData {
-  month: string;
-  value: number;
+interface SystemItem {
+  systemKey: number;
+  name: string;
 }
 
 const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState<DashboardStats>({ totalLocations: 0 });
-  const [chartData, setChartData] = useState<ChartData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    fetch('http://localhost:5102/api/Locations')
-
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
+  const [locations, setLocations] = useState<LocationItem[]>([]);
+  const [systems, setSystems] = useState<SystemItem[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+  const [showSettingsMenu, setShowSettingsMenu] = useState<boolean>(false);
   
-        const count = data.length;
-        setStats({ totalLocations: count });
-        
-        
-        setChartData([
-          { month: 'Jan', value: count > 0 ? count - 2 : 0 },
-          { month: 'Feb', value: count > 0 ? count - 1 : 0 },
-          { month: 'Mar', value: count },
-        ]);
-        setLoading(false);
+  const [activeMiddleView, setActiveMiddleView] = useState<'liveData' | 'locationManager' | 'equipmentManager' | 'systemManager'>('liveData');
+
+ // Temporary Hardcoded Mock Data Test inside Dashboard.tsx
+    useEffect(() => {
+    fetch('/api/Locations')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch location structural map.');
+        return res.json();
       })
-      .catch(error => {
-        console.error("Error fetching locations:", error);
-        setLoading(false);
+      .then((data) => {
+        
+        setLocations(data);
+      })
+      .catch((err) => {
+        console.error("Database connection error:", err);
       });
   }, []);
 
-  if (loading) return <div className="loading-text">Loading Dashboard Data...</div>;
+
+  
+
+  const locationMap = useMemo(() => {
+    return new Map(locations.map(loc => [loc.locationKey, loc]));
+  }, [locations]);
+
+  const selectedLocationData = selectedLocation !== null ? locationMap.get(selectedLocation) : null;
+
+  const handleLocationClick = (locationKey: number) => {
+    setSelectedLocation(locationKey);
+    setActiveMiddleView('liveData');
+    
+    fetch(`/api/locations/${locationKey}/systems`)
+      .then((res) => res.json())
+      .then((data) => setSystems(data))
+      .catch((err) => console.error('Error fetching systems:', err));
+  };
 
   return (
-    <div className="dashboard-view">
-      <header className="dashboard-header">
-        <h1 className="text-3xl font-bold text-slate-800">Overview Dashboard</h1>
-        <p className="text-slate-500 mt-1">Welcome back! Here is your live project summary.</p>
-      </header>
+    <div className="ibacs-container">
+      <div className="ibacs-main-layout">
+        
+        {/* 🔹 Left Column: Subsystem Navigator */}
+        <aside className="panel subsystem-navigator">
+          <h3>Subsystem Navigator</h3>
+          {selectedLocation === null ? (
+            <p className="placeholder-text">Please select a location to view its systems.</p>
+          ) : systems.length > 0 ? (
+            <ul className="nav-list">
+              {systems.map((sys) => (
+                <li key={sys.systemKey} className="system-nav-item">⚙️ {sys.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="error-text">No systems available for this location.</p>
+          )}
+        </aside>
 
-      <div className="dashboard-grid mt-8">
-        <div className="metric-card">
-          <h3>Total System Locations</h3>
-          <p className="metric-number">{stats.totalLocations}</p>
-        </div>
-      </div>
+        {/* 🔸 Center Canvas Column: Active RT Page View */}
+        <main className="panel rt-page-view">
+          <h3>RT Page View</h3>
+          
+          {activeMiddleView === 'locationManager' && (
+            <div>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
+                <h4 style={{ marginTop: 0 }}>🏢 Location Manager</h4>
+                <p style={{ color: '#64748b', fontSize: '13px' }}>Location configuration and hierarchical tree forms will render here.</p>
+              </div>
+            </div>
+          )}
 
-      <div className="chart-card-wrapper mt-8">
-        <h3 className="text-lg font-semibold text-slate-700 mb-4">Locations Growth Analytics</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="month" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
-            <Tooltip />
-            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
+          {activeMiddleView === 'equipmentManager' && (
+            <div>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <EquipmentManager />
+            </div>
+          )}
+
+          {activeMiddleView === 'systemManager' && (
+            <div>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
+                <h4 style={{ marginTop: 0 }}>⚙️ System Manager</h4>
+                <p style={{ color: '#64748b', fontSize: '13px' }}>Automation subsystem loops and logical network tags will render here.</p>
+              </div>
+            </div>
+          )}
+
+          {activeMiddleView === 'liveData' && (
+            <div className="rt-content-box">
+              {selectedLocation && selectedLocationData ? (
+                <div>
+                  <p style={{ fontWeight: '600', color: '#334155', margin: '0 0 15px 0' }}>
+                    Currently Selected Location: <span style={{ color: '#2563eb' }}>{selectedLocationData.fullName}</span>
+                  </p>
+                  <div style={{ padding: '40px 20px', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: '6px', color: '#64748b', textAlign: 'center' }}>
+                    Telemetry metrics data points viewport canvas will render here.
+                  </div>
+                </div>
+              ) : (
+                <p className="placeholder-text" style={{ margin: 0 }}>Please select a location from the right panel to view live equipment data.</p>
+              )}
+            </div>
+          )}
+        </main>
+
+        {/* 🟩 Right Column: Location Hierarchical Navigation Tree */}
+        <aside className="panel location-navigator">
+          <h3>Location Navigator</h3>
+          <LocationTree 
+            items={locations} 
+            selectedId={selectedLocation} 
+            onSelect={handleLocationClick} 
+          />
+        </aside>
+
       </div>
     </div>
   );

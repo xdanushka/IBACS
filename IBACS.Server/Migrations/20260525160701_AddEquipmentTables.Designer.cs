@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBACS.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260408122202_test")]
-    partial class test
+    [Migration("20260525160701_AddEquipmentTables")]
+    partial class AddEquipmentTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

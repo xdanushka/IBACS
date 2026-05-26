@@ -16,15 +16,17 @@ namespace IBACS.Server.Controllers
             _context = context;
         }
 
-        // GET: api/Locations
+                // GET: api/Locations
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Location>>> GetLocations()
         {
             return await _context.Locations
                 .Include(l => l.LocationType)
                 .Include(l => l.ParentLocation)
+                .Where(l => l.LocationName != "Main Building 01" && l.LocationName != "Main Building 02")
                 .ToListAsync();
         }
+
 
         // GET: api/Locations/5
         [HttpGet("{id}")]
