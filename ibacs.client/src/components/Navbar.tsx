@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import SettingsDropdown from './SettingsDropdown';
 import { LayoutDashboard } from 'lucide-react';
-import { cn } from './UI/Button';
 
 const Navbar = () => {
   return (
@@ -19,7 +18,7 @@ const Navbar = () => {
               IBACS
             </h1>
             <p className="text-[10px] text-white/70 font-medium uppercase tracking-widest mt-0.5">
-              Intelligent Building Automation && Control
+              Intelligent Building Automation & Control
             </p>
           </div>
         </Link>

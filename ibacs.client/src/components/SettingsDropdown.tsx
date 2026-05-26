@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Settings, MapPin, LayoutDashboard, ChevronRight } from 'lucide-react';
+import { Settings, MapPin, LayoutDashboard, ChevronRight, LogOut } from 'lucide-react'; // 🆕 LogOut icon added
 import { Link } from 'react-router-dom';
 import { cn } from './UI/Button';
 
@@ -16,6 +16,12 @@ const SettingsDropdown = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // 🆕 Logout function to clear session and redirect
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/';
+  };
 
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -40,6 +46,7 @@ const SettingsDropdown = () => {
             <p className="text-sm font-semibold text-slate-800">System Settings</p>
             <p className="text-xs text-slate-500 mt-0.5">Manage building properties</p>
           </div>
+          
           <div className="py-2">
             {menuItems.map((item) => (
               <Link
@@ -57,6 +64,19 @@ const SettingsDropdown = () => {
                 <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
               </Link>
             ))}
+
+            {/* 🆕 Logout Section */}
+            <div className="border-t border-slate-100 mt-2 pt-2">
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-all"
+              >
+                <div className="p-1.5 rounded-lg bg-red-50">
+                  <LogOut size={16} />
+                </div>
+                <span className="font-medium">Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
