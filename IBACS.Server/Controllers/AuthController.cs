@@ -73,5 +73,7 @@ namespace IBACS.Server.Controllers
             };
             return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
         }
+        
     }
+
 }
