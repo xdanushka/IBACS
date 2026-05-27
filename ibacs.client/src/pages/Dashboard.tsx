@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './Dashboard.css';
 import { EquipmentManager } from '../components/EquipmentManager';
 import { LocationTree } from '../components/LocationTree';
+import StructuralDashboard from '../components/StructuralDashboard.tsx';
+
+
 
 interface LocationItem {
   locationKey: number;
@@ -38,9 +41,6 @@ const Dashboard: React.FC = () => {
         console.error("Database connection error:", err);
       });
   }, []);
-
-
-  
 
   const locationMap = useMemo(() => {
     return new Map(locations.map(loc => [loc.locationKey, loc]));
@@ -129,13 +129,11 @@ const Dashboard: React.FC = () => {
 
         {/* 🟩 Right Column: Location Hierarchical Navigation Tree */}
         <aside className="panel location-navigator">
-          <h3>Location Navigator</h3>
-          <LocationTree 
-            items={locations} 
-            selectedId={selectedLocation} 
-            onSelect={handleLocationClick} 
-          />
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '15px' }}>Structural View</h3>
+          <StructuralDashboard />
         </aside>
+
+
 
       </div>
     </div>
