@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
-import { getAllEquipment } from '../api/equipmentServices';
-import { Equipment } from '../types/Equipment';
+// Change this line to point to your api folder
+import { getAllEquipment, Equipment } from '../api/equipmentServices'; 
 
-export const EquipmentPage = () => {
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // Add loading state
+const Equipment = () => {
+  const [equipments, setEquipments] = useState<Equipment[]>([]); // Use the interface directly
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     getAllEquipment()
       .then((data) => {
         setEquipments(data);
-        setLoading(false); // Data arrived!
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Error loading equipment", err);
@@ -18,7 +18,6 @@ export const EquipmentPage = () => {
       });
   }, []);
 
-  // Show a loading message while waiting
   if (loading) return <div>Loading equipment...</div>;
 
   return (
@@ -29,7 +28,6 @@ export const EquipmentPage = () => {
       ) : (
         <ul>
           {equipments.map((e) => (
-            // Ensure equipmentKey is unique
             <li key={e.equipmentKey}>{e.name}</li>
           ))}
         </ul>
@@ -37,3 +35,5 @@ export const EquipmentPage = () => {
     </div>
   );
 };
+
+export default Equipment;

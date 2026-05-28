@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { Equipment } from '../types/Equipment'; 
+import api from './axiosConfig';
 
 // Ensure you have a central axios instance or use base axios
 const API_BASE_URL = '/api/equipment';
