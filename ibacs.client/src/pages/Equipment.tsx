@@ -4,22 +4,36 @@ import { Equipment } from '../types/Equipment';
 
 export const EquipmentPage = () => {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true); // Add loading state
 
   useEffect(() => {
-    // Call the service you just created
-    getAllEquipment().then((data) => {
-      setEquipments(data);
-    }).catch(err => console.error("Error loading equipment", err));
+    getAllEquipment()
+      .then((data) => {
+        setEquipments(data);
+        setLoading(false); // Data arrived!
+      })
+      .catch((err) => {
+        console.error("Error loading equipment", err);
+        setLoading(false);
+      });
   }, []);
+
+  // Show a loading message while waiting
+  if (loading) return <div>Loading equipment...</div>;
 
   return (
     <div>
       <h1>Equipment List</h1>
-      <ul>
-        {equipments.map((e) => (
-          <li key={e.equipmentKey}>{e.name}</li>
-        ))}
-      </ul>
+      {equipments.length === 0 ? (
+        <p>No equipment found.</p>
+      ) : (
+        <ul>
+          {equipments.map((e) => (
+            // Ensure equipmentKey is unique
+            <li key={e.equipmentKey}>{e.name}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
