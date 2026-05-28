@@ -78,8 +78,9 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     <LayoutDashboard size={40} />
                 </div>
                 
+                {/* මෙතැනදී Sign In පිටුවට අදාළව පෙළ වෙනස් වේ */}
                 <p style={{ color: '#040404', fontSize: '16px', marginBottom: '25px', textAlign: 'center', fontWeight: 'bold' }}>
-                    Access your IBACS dashboard
+                    {forgotStep === 'SignIn' ? 'Create your IBACS account' : 'Access your IBACS dashboard'}
                 </p>
                 
                 <h2 style={{ textAlign: 'center', margin: '0 0 20px 0', fontWeight: 'bold', fontSize: '30px' }}>
@@ -89,7 +90,6 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                 {message && <p style={{ color: "green", textAlign: 'center', fontSize: '14px' }}>{message}</p>}
                 {error && <p className="error-text">{error}</p>}
 
-                {/* Login Form - No Back Button */}
                 {forgotStep === 'none' && (
                     <form className="login-form" onSubmit={handleLogin}>
                         <div className="input-group"><User className="input-icon" size={20} /><input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required /></div>
@@ -100,12 +100,11 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                         <button type="submit" className="login-btn">LOGIN</button>
                         <p style={{ marginTop: '10px', fontSize: '14px', textAlign: 'center' }}>
                             New user? {''}
-                            <a href="#" onClick={(e) => { e.preventDefault(); setForgotStep('SignIn'); }} style={{ color: '#007bff', textDecoration: 'none', fontWeight: 'bold' }}>Sign In here</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); setForgotStep('SignIn'); }} style={{ color: '#007bff', textDecoration: 'none', fontWeight: 'bold' }}>Sign in here</a>
                         </p>
                     </form>
                 )}
 
-                {/* Sign In Form */}
                 {forgotStep === 'SignIn' && (
                     <form className="login-form" onSubmit={handleSignIn}>
                         <div className="input-group"><User className="input-icon" size={20} /><input type="text" placeholder="Set Username" onChange={(e) => setUsername(e.target.value)} required /></div>
@@ -115,7 +114,6 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     </form>
                 )}
 
-                {/* Email Form */}
                 {forgotStep === 'email' && (
                     <form className="login-form" onSubmit={handleSendOtp}>
                         <div className="input-group"><Mail className="input-icon" size={20} /><input type="email" placeholder="Enter Email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required /></div>
@@ -124,7 +122,6 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     </form>
                 )}
 
-                {/* OTP Form */}
                 {forgotStep === 'otp' && (
                     <form className="login-form" onSubmit={(e) => { 
                         e.preventDefault(); 
@@ -136,7 +133,6 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     </form>
                 )}
 
-                {/* Reset Form */}
                 {forgotStep === 'reset' && (
                     <form className="login-form" onSubmit={(e) => { e.preventDefault(); localStorage.setItem('appPassword', newPassword); setMessage("Password reset!"); setForgotStep('none'); }}>
                         <div className="input-group"><Lock className="input-icon" size={20} /><input type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required /></div>
