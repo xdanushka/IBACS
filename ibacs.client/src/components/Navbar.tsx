@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import SettingsDropdown from './SettingsDropdown';
 import { LayoutDashboard } from 'lucide-react';
-import { cn } from './UI/Button';
 
 const Navbar = () => {
   return (
