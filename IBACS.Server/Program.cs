@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using IBACS.Server.Data;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace IBACS.Server
 {
@@ -17,26 +20,39 @@ namespace IBACS.Server
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
 
-            // DbContext Registration (PostgreSQL Connection)
+            // DbContext Registration for PostgreSQL
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Add Swagger services
+            // JWT Authentication Configuration
+            var jwtKey = builder.Configuration["Jwt:Key"] ?? "IBACS_SUPER_SECRET_KEY_FOR_JWT_TOKEN_123456";
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    // Validating the token using the secret key from appsettings
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtKey)),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+
             builder.Services.AddSwaggerGen();
 
-            // Add CORS services configured for React Vite Dev Server
+            // CORS Policy
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowReactApp",
-                    policy => policy.WithOrigins("http://localhost:5173", "https://localhost:5173") // Supports both http and https dev ports
+                    policy => policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
                                     .AllowAnyMethod()
                                     .AllowAnyHeader()
-                                    .AllowCredentials()); // Allowed for secure cookies/headers tracking if needed
+                                    .AllowCredentials());
             });
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -47,9 +63,10 @@ namespace IBACS.Server
                 app.UseHttpsRedirection();
             }
 
-            // CRITICAL MIDDLEWARE ORDER: CORS must be loaded before Authorization/Routing processes
             app.UseCors("AllowReactApp");
 
+            // Critical Security Middleware Order
+            app.UseAuthentication(); // Must be called before Authorization
             app.UseAuthorization();
 
             app.MapControllers();

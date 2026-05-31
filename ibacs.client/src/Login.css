@@ -124,6 +124,7 @@
     font-weight: bold;
 }
 
+
 .back-btn {
     width: 100%;
     padding: 12px;
@@ -146,3 +147,26 @@
 .back-btn:hover {
     background: #0369a1; 
 }
+.pwd-req-box {
+    position: absolute;
+    z-index: 100;
+    background: #ffffff;
+    border: 1px solid #0284c7;
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: -160px;
+    margin-left: 20px;
+    width: 220px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    text-align: left;
+    font-size: 12px;
+}
+
+.req-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.valid { color: #10b981; }
+.invalid { color: #e11d48; }
