@@ -11,31 +11,31 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ setAuth }) => {
     const navigate = useNavigate();
     
-    // State management for inputs and user data
-    const [username, setUsername] = useState(''); // Serves as the unique Email
+    // --- State Management ---
+    const [username, setUsername] = useState(''); // Stores the user's email
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     
-    // State to track authentication steps
+    // Tracks the current step in the UI flow (Login, Sign-in, or Password Reset steps)
     const [forgotStep, setForgotStep] = useState<'none' | 'email' | 'otp' | 'reset' | 'SignIn'>('none');
     
-    // State for password requirement tooltip and OTP timing
+    // State for password requirement tooltip and OTP management
     const [isHovered, setIsHovered] = useState(false);
     const [otpTime, setOtpTime] = useState<number | null>(null);
-
     const [resetEmail, setResetEmail] = useState('');
     const [otp, setOtp] = useState(''); 
     const [otpInput, setOtpInput] = useState(''); 
     const [newPassword, setNewPassword] = useState('');
 
+    // Check if user is already logged in
     useEffect(() => {
         if (localStorage.getItem('token') === 'true') {
             navigate('/dashboard');
         }
     }, [navigate]);
 
-    // Handle user login authentication
+    // --- Authentication Logic ---
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         const savedUser = localStorage.getItem('appUsername');
@@ -50,7 +50,6 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
         }
     };
 
-    // Handle new account creation
     const handleSignIn = (e: React.FormEvent) => {
         e.preventDefault();
         setError(''); 
@@ -61,15 +60,17 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
             return;
         }
 
+        // Email and Password validation regex
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+
         if (!emailRegex.test(username)) {
             setError("Please enter a valid email address.");
             return;
         }
 
-        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
         if (!passwordRegex.test(password)) {
-            setError("Password must meet the security requirements.");
+            setError("Password does not meet security requirements.");
             return;
         }
 
@@ -79,13 +80,13 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
         setForgotStep('none');
     };
 
-    // Handle secure OTP sending with timestamp
+    // --- Password Reset Logic ---
     const handleSendOtp = (e: React.FormEvent) => {
         e.preventDefault();
         const savedUser = localStorage.getItem('appUsername');
         
         if (!resetEmail || resetEmail !== savedUser) {
-            setError("Please use the same email you used to create your account.");
+            setError("Please use the email associated with your account.");
             return;
         }
         
@@ -97,14 +98,13 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
             .then(() => {
                 alert("OTP sent! It will expire in 3 minutes.");
                 setOtp(generatedOtp);
-                setOtpTime(Date.now()); // Capture the exact time OTP was sent
+                setOtpTime(Date.now());
                 setForgotStep('otp');
-            }, (_error) => {
+            }, () => {
                 setError("Failed to send OTP. Please try again.");
             });
     };
 
-    // Verify OTP and check for expiration (3 minutes = 300,000ms)
     const verifyOtp = (e: React.FormEvent) => {
         e.preventDefault();
         const currentTime = Date.now();
@@ -112,7 +112,7 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
 
         if (otpTime && (currentTime - otpTime > expiryLimit)) {
             setError("OTP expired! Please request a new one.");
-            setForgotStep('email'); // Redirect back to request a new OTP
+            setForgotStep('email');
         } else if (otp === otpInput) {
             setError('');
             setForgotStep('reset');
@@ -150,7 +150,7 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     </form>
                 )}
 
-                {/* Sign In Step */}
+                {/* Sign In Step (Account Creation) */}
                 {forgotStep === 'SignIn' && (
                     <form className="login-form" onSubmit={handleSignIn}>
                         <div className="input-group"><User className="input-icon" size={20} /><input type="email" placeholder="Enter your email" onChange={(e) => setUsername(e.target.value)} required /></div>
@@ -174,7 +174,7 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     </form>
                 )}
 
-                {/* Email, OTP Verification, and Reset Steps */}
+                {/* Reset Password Steps (Email -> OTP -> New Password) */}
                 {forgotStep === 'email' && (
                     <form className="login-form" onSubmit={handleSendOtp}>
                         <div className="input-group"><Mail className="input-icon" size={20} /><input type="email" placeholder="Enter Email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required /></div>
@@ -190,10 +190,29 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     </form>
                 )}
                 {forgotStep === 'reset' && (
-                    <form className="login-form" onSubmit={(e) => { e.preventDefault(); localStorage.setItem('appPassword', newPassword); setMessage("Password reset!"); setForgotStep('none'); }}>
-                        <div className="input-group"><Lock className="input-icon" size={20} /><input type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required /></div>
+                    <form className="login-form" onSubmit={(e) => { 
+                        e.preventDefault(); 
+                        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+                        if (!passwordRegex.test(newPassword)) { setError("Password does not meet requirements!"); return; }
+                        localStorage.setItem('appPassword', newPassword); setMessage("Password reset!"); setForgotStep('none'); 
+                    }}>
+                        <div className="input-group">
+                            <Lock className="input-icon" size={20} />
+                            <input type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} required />
+                        </div>
+                        {isHovered && (
+                            <div className="pwd-req-box">
+                                <p style={{ margin: '0 0 5px 0', fontSize: '12px', fontWeight: 'bold' }}>Password must contain:</p>
+                                <ul className="req-list">
+                                    <li className={newPassword.length >= 8 ? 'valid' : 'invalid'}>• 8+ characters</li>
+                                    <li className={/[A-Z]/.test(newPassword) ? 'valid' : 'invalid'}>• 1 Capital letter</li>
+                                    <li className={/\d/.test(newPassword) ? 'valid' : 'invalid'}>• 1 Number</li>
+                                    <li className={/[@$!%*#?&]/.test(newPassword) ? 'valid' : 'invalid'}>• 1 Special character</li>
+                                </ul>
+                            </div>
+                        )}
                         <button type="submit" className="login-btn">RESET PASSWORD</button>
-                        <button type="button" className="back-btn" onClick={() => setForgotStep('none')}>Back</button>
+                        <button type="button" className="back-btn" onClick={() => setForgotStep('otp')}>Back</button>
                     </form>
                 )}
             </div>
