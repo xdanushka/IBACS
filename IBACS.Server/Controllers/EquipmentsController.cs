@@ -16,7 +16,7 @@ namespace IBACS.Server.Controllers
             _context = context;
         }
 
-        // 📝 API 01: සියලුම උපකරණ ලැයිස්තුව ලබාදීම (GET: api/Equipments)
+        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> GetEquipments()
         {
@@ -33,7 +33,7 @@ CategoryName = e.EquipmentCategory != null ? e.EquipmentCategory.ToString() : "U
                 .ToListAsync();
         }
 
-        // 📝 API 02: අලුතින් උපකරණයක් ඇතුළත් කිරීම (POST: api/Equipments)
+        
         [HttpPost]
         public async Task<ActionResult<Equipment>> PostEquipment(Equipment equipment)
         {

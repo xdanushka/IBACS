@@ -1,170 +1,236 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Building2, Layers, ChevronDown, ChevronRight, LayoutGrid } from 'lucide-react';
 
-const StructuralDashboard = () => {
-  // 📍 Tracks the currently highlighted node across the navigation panel (Defaults to '2nd Floor')
-  const [activeItem, setActiveItem] = useState<string>('2nd Floor');
+interface TreeNode {
+  locationKey: number;
+  locationName: string;
+  parentLocationKey: number | null;
+  isFolder?: boolean;
+  children: TreeNode[];
+}
 
-  // 📍 Tracks which high-level building branch container layout is explicitly open
-  const [openBuilding, setOpenBuilding] = useState<string | null>('Building 01');
-  
-  // 📍 Tracks which specific floor tier sub-branch is explicitly open
-  const [openFloor, setOpenFloor] = useState<string | null>('2nd Floor');
+interface StructuralDashboardProps {
+  items: any[]; // Changed to any[] to safely intercept dynamic string/numeric types from parent props
+  selectedId?: number | null;
+  onSelect?: (id: number) => void;
+}
 
-  // 🎨 Unified theme configurations and responsive layout properties
-  const styles = {
-    itemBase: { display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' as const, fontWeight: '500' },
+// 🔄 Highly robust helper function to safely map parent-child nodes regardless of string/number type mismatches
+const buildDynamicTree = (flatList: any[]): TreeNode[] => {
+  if (!Array.isArray(flatList) || flatList.length === 0) return [];
+
+  const nodeMap = new Map<number, TreeNode>();
+  const roots: TreeNode[] = [];
+
+  // Step 1: Normalize properties and register every item into the map cache using numeric keys
+  flatList.forEach(item => {
+    if (!item) return;
     
-    // Core structural identity color mapping states
-    buildingBg: { background: '#2563eb', color: '#ffffff', width: '100%' },
-    floorBg: { marginLeft: '16px', padding: '8px', background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', border: '1px solid rgba(59, 130, 246, 0.3)', width: 'calc(100% - 16px)' },
-    spaceBg: { marginLeft: '32px', padding: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.2)', fontSize: '12px', width: 'calc(100% - 32px)' },
-    basementBg: { marginLeft: '16px', padding: '8px', background: '#334155', color: '#cbd5e1', border: '1px solid #475569', width: 'calc(100% - 16px)' },
+    // Fallback extraction support for various database casing schemas
+    const rawKey = item.locationKey ?? item.location_key ?? item.LocationKey;
+    const rawName = item.locationName ?? item.location_name ?? item.LocationName ?? 'Unknown';
+    const rawParentKey = item.parentLocationKey ?? item.parent_location_key ?? item.ParentLocationKey ?? null;
 
-    // Fallback baseline icon color metrics
-    floorIconDefault: '#60a5fa',
-    basementIconDefault: '#94a3b8',
-
-    // Solid Golden Yellow Active Theme configuration override matrix
-    activeBoxTheme: { background: '#f59e0b', color: '#0f172a', fontWeight: '600', border: '1px solid transparent', boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)' }
-  };
-
-  // 🔄 Handles building switches and explicitly resets lower-tier sub-menus
-  const handleBuildingClick = (buildingName: string) => {
-    setActiveItem(buildingName);
-    if (openBuilding === buildingName) {
-      setOpenBuilding(null);
-      setOpenFloor(null);
-    } else {
-      setOpenBuilding(buildingName);
-      setOpenFloor(null); 
+    if (rawKey !== undefined && rawKey !== null) {
+      const numericKey = Number(rawKey);
+      
+      // Handle option value conversion failures safely
+      if (!isNaN(numericKey)) {
+        nodeMap.set(numericKey, {
+          locationKey: numericKey,
+          locationName: String(rawName),
+          parentLocationKey: (rawParentKey === null || rawParentKey === "" || rawParentKey === "null") ? null : Number(rawParentKey),
+          isFolder: item.isFolder !== undefined ? !!item.isFolder : true,
+          children: []
+        });
+      }
     }
+  });
+
+  // Step 2: Dynamically link child nodes onto parent structural reference parameters
+  nodeMap.forEach(node => {
+    const parent = node.parentLocationKey;
+    if (parent === null || parent === undefined || !nodeMap.has(Number(parent)) || Number(parent) === node.locationKey) {
+      roots.push(node);
+    } else {
+      const parentNode = nodeMap.get(Number(parent));
+      if (parentNode) {
+        parentNode.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+  });
+
+  return roots;
+};
+
+interface RenderBranchProps {
+  nodes: TreeNode[];
+  level: number;
+  activeItem: string;
+  setActiveItem: (name: string) => void;
+  expandedNodes: { [key: number]: boolean };
+  onToggleExpand: (id: number) => void;
+}
+
+// 📦 Recursive component to dynamically map UI rendering branches based on nested data layouts
+const RenderBranch: React.FC<RenderBranchProps> = ({
+  nodes,
+  level,
+  activeItem,
+  setActiveItem,
+  expandedNodes,
+  onToggleExpand
+}) => {
+  const getStylesByLevel = (currentLevel: number, isSelected: boolean) => {
+    const isRoot = currentLevel === 0;
+    const isSubTier = currentLevel === 1;
+
+    let background = 'rgba(16, 185, 129, 0.1)'; 
+    let color = '#34d399';
+    let border = '1px solid rgba(16, 185, 129, 0.2)';
+    let marginLeft = '32px';
+    let fontSize = '12px';
+
+    if (isRoot) {
+      background = '#2563eb'; 
+      color = '#ffffff';
+      border = '1px solid transparent';
+      marginLeft = '0px';
+      fontSize = '14px';
+    } else if (isSubTier) {
+      background = 'rgba(59, 130, 246, 0.2)'; 
+      color = '#93c5fd';
+      border = '1px solid rgba(59, 130, 246, 0.3)';
+      marginLeft = '16px';
+      fontSize = '14px';
+    }
+
+    if (isSelected) {
+      return {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: isRoot ? '10px' : '8px',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        boxSizing: 'border-box' as const,
+        fontWeight: '600',
+        background: '#f59e0b',
+        color: '#0f172a',
+        border: '1px solid transparent',
+        boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)',
+        marginLeft,
+        fontSize,
+        width: isRoot ? '100%' : `calc(100% - ${marginLeft})`
+      };
+    }
+
+    return {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: isRoot ? '10px' : '8px',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      transition: 'all 0.2s',
+      boxSizing: 'border-box' as const,
+      fontWeight: '500',
+      background,
+      color,
+      border,
+      marginLeft,
+      fontSize,
+      width: isRoot ? '100%' : `calc(100% - ${marginLeft})`
+    };
   };
 
-  // 🔄 Handles floor clicks and isolates internal subspace menu updates
-  const handleFloorClick = (floorName: string) => {
-    setActiveItem(floorName);
-    setOpenFloor(openFloor === floorName ? null : floorName);
+  return (
+    <>
+      {nodes.map(node => {
+        const hasChildren = node.children.length > 0;
+        const isExpanded = !!expandedNodes[node.locationKey];
+        const isSelected = activeItem?.toLowerCase() === node.locationName?.toLowerCase();
+
+        return (
+          <div key={node.locationKey} style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+            <div
+              style={getStylesByLevel(level, isSelected)}
+              onClick={() => {
+                setActiveItem(node.locationName);
+                if (hasChildren) onToggleExpand(node.locationKey);
+              }}
+            >
+              {level === 0 ? (
+                <Building2 size={18} style={{ flexShrink: 0 }} />
+              ) : hasChildren ? (
+                <Layers size={16} style={{ flexShrink: 0, color: isSelected ? 'inherit' : '#60a5fa' }} />
+              ) : (
+                <LayoutGrid size={14} style={{ flexShrink: 0 }} />
+              )}
+
+              <span>{node.locationName}</span>
+
+              {hasChildren && (
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+                  {isExpanded ? <ChevronDown size={level === 0 ? 16 : 14} /> : <ChevronRight size={level === 0 ? 16 : 14} />}
+                </div>
+              )}
+            </div>
+
+            {hasChildren && isExpanded && (
+              <RenderBranch
+                nodes={node.children}
+                level={level + 1}
+                activeItem={activeItem}
+                setActiveItem={setActiveItem}
+                expandedNodes={expandedNodes}
+                onToggleExpand={onToggleExpand}
+              />
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items }) => {
+  // Recalculate component tree parameters safely upon any raw element dependency changes
+  const treeData = useMemo(() => buildDynamicTree(items), [items]);
+  
+  const [activeItem, setActiveItem] = useState<string>('2nd floor');
+  const [expandedNodes, setExpandedNodes] = useState<{ [key: number]: boolean }>({
+    1: true, 
+    3: true  
+  });
+
+  const handleToggleExpand = (id: number) => {
+    setExpandedNodes(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  // Safe validation step to check if parsed hierarchy roots actually populated
+  if (!treeData || treeData.length === 0) {
+    return (
+      <div style={{ padding: '20px', background: '#1e293b', color: '#94a3b8', borderRadius: '12px', fontSize: '13px', textAlign: 'center' }}>
+        No locations configured in your database infrastructure setup yet.
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '12px', background: '#1e293b', color: '#f8fafc', borderRadius: '12px', fontFamily: 'sans-serif', border: '1px solid #334155', width: '100%', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-        
-        {/* === BUILDING 01 CORE TIER === */}
-        <div 
-          style={{ ...styles.itemBase, ...(activeItem === 'Building 01' ? { ...styles.activeBoxTheme, width: styles.buildingBg.width } : styles.buildingBg) }}
-          onClick={() => handleBuildingClick('Building 01')}
-        >
-          <Building2 size={18} style={{ flexShrink: 0 }} />
-          <span>Building 01</span>
-          {/* 🌟 Dynamic Arrow indicator to hint that this branch has nested items */}
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-            {openBuilding === 'Building 01' ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          </div>
-        </div>
-
-        {/* Dynamic Nested Tiers: Renders floors only if Building 01 is currently open */}
-        {openBuilding === 'Building 01' && (
-          <>
-            {/* 3rd Floor Tier */}
-            <div 
-              style={{ ...styles.itemBase, ...(activeItem === '3rd Floor' ? { ...styles.activeBoxTheme, marginLeft: styles.floorBg.marginLeft, width: styles.floorBg.width } : styles.floorBg) }}
-              onClick={() => setActiveItem('3rd Floor')}
-            >
-              <Layers size={16} style={{ flexShrink: 0, color: activeItem === '3rd Floor' ? 'inherit' : styles.floorIconDefault }} />
-              <span>3rd Floor</span>
-            </div>
-
-            {/* 2nd Floor Tier */}
-            <div 
-              style={{ ...styles.itemBase, ...(activeItem === '2nd Floor' ? { ...styles.activeBoxTheme, marginLeft: styles.floorBg.marginLeft, width: styles.floorBg.width } : styles.floorBg) }}
-              onClick={() => handleFloorClick('2nd Floor')}
-            >
-              <Layers size={16} style={{ flexShrink: 0, color: activeItem === '2nd Floor' ? 'inherit' : styles.floorIconDefault }} />
-              <span>2nd Floor</span>
-              {/* 🌟 Dynamic Arrow indicator for sub-spaces inside 2nd floor */}
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-                {openFloor === '2nd Floor' ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-              </div>
-            </div>
-
-            {/* Dynamic Nested Subspaces: Renders spaces only if 2nd Floor is currently open */}
-            {openFloor === '2nd Floor' && (
-              <>
-                <div 
-                  style={{ ...styles.itemBase, ...(activeItem === 'Space 01' ? { ...styles.activeBoxTheme, marginLeft: styles.spaceBg.marginLeft, width: styles.spaceBg.width } : styles.spaceBg) }}
-                  onClick={() => setActiveItem('Space 01')}
-                >
-                  <LayoutGrid size={14} style={{ flexShrink: 0 }} />
-                  <span>Space 01</span>
-                </div>
-
-                <div 
-                  style={{ ...styles.itemBase, ...(activeItem === 'Space 02' ? { ...styles.activeBoxTheme, marginLeft: styles.spaceBg.marginLeft, width: styles.spaceBg.width } : styles.spaceBg) }}
-                  onClick={() => setActiveItem('Space 02')}
-                >
-                  <LayoutGrid size={14} style={{ flexShrink: 0 }} />
-                  <span>Space 02</span>
-                </div>
-              </>
-            )}
-
-            {/* 1st Floor Tier */}
-            <div 
-              style={{ ...styles.itemBase, ...(activeItem === '1st Floor' ? { ...styles.activeBoxTheme, marginLeft: styles.floorBg.marginLeft, width: styles.floorBg.width } : styles.floorBg) }}
-              onClick={() => setActiveItem('1st Floor')}
-            >
-              <Layers size={16} style={{ flexShrink: 0, color: activeItem === '1st Floor' ? 'inherit' : styles.floorIconDefault }} />
-              <span>1st Floor</span>
-            </div>
-
-            {/* Basement Infrastructure Levels (B_01) */}
-            <div 
-              style={{ ...styles.itemBase, ...(activeItem === 'B_01 Floor' ? { ...styles.activeBoxTheme, marginLeft: styles.basementBg.marginLeft, width: styles.basementBg.width } : styles.basementBg) }}
-              onClick={() => setActiveItem('B_01 Floor')}
-            >
-              <ChevronDown size={16} style={{ flexShrink: 0, color: activeItem === 'B_01 Floor' ? 'inherit' : styles.basementIconDefault }} />
-              <span>B_01 Floor</span>
-            </div>
-
-            {/* Basement Infrastructure Levels (B_02) */}
-            <div 
-              style={{ ...styles.itemBase, ...(activeItem === 'B_02 Floor' ? { ...styles.activeBoxTheme, marginLeft: styles.basementBg.marginLeft, width: styles.basementBg.width } : styles.basementBg) }}
-              onClick={() => setActiveItem('B_02 Floor')}
-            >
-              <ChevronDown size={16} style={{ flexShrink: 0, color: activeItem === 'B_02 Floor' ? 'inherit' : styles.basementIconDefault }} />
-              <span>B_02 Floor</span>
-            </div>
-          </>
-        )}
-
-        {/* === BUILDING 02 CORE TIER === */}
-        <div 
-          style={{ ...styles.itemBase, ...(activeItem === 'Building 02' ? { ...styles.activeBoxTheme, width: styles.buildingBg.width } : styles.buildingBg), marginTop: '16px' }}
-          onClick={() => handleBuildingClick('Building 02')}
-        >
-          <Building2 size={18} style={{ flexShrink: 0 }} />
-          <span>Building 02</span>
-          {/* 💡 Chevron visibility removed completely because Building 02 is empty */}
-        </div>
-        {openBuilding === 'Building 02' && (
-          <div style={{ marginLeft: '16px', fontSize: '13px', color: '#94a3b8', padding: '6px' }}>No floors mapped for Building 02.</div>
-        )}
-
-        {/* === BUILDING 03 CORE TIER === */}
-        <div 
-          style={{ ...styles.itemBase, ...(activeItem === 'Building 03' ? { ...styles.activeBoxTheme, width: styles.buildingBg.width } : styles.buildingBg) }}
-          onClick={() => handleBuildingClick('Building 03')}
-        >
-          <Building2 size={18} style={{ flexShrink: 0 }} />
-          <span>Building 03</span>
-          {/* 💡 Chevron visibility removed completely because Building 03 is empty */}
-        </div>
-        {openBuilding === 'Building 03' && (
-          <div style={{ marginLeft: '16px', fontSize: '13px', color: '#94a3b8', padding: '6px' }}>No floors mapped for Building 03.</div>
-        )}
-
+        <RenderBranch
+          nodes={treeData}
+          level={0}
+          activeItem={activeItem}
+          setActiveItem={setActiveItem}
+          expandedNodes={expandedNodes}
+          onToggleExpand={handleToggleExpand}
+        />
       </div>
     </div>
   );

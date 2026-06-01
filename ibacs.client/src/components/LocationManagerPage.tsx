@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { LocationTree } from './LocationTree';
+import LocationTable from './LocationTable';
+import StructuralDashboard from './StructuralDashboard'; 
+
 
 export const LocationManagerPage = () => {
   // 1. Centralized state storage pre-populated with your complete hierarchical layout
@@ -40,7 +42,7 @@ export const LocationManagerPage = () => {
       isFolder: isFolder 
     };
 
-    // Updating state instantly pushes down refreshed data props into the child LocationTree
+    // Updating state instantly pushes down refreshed data props into the child StructuralDashboard
     setLocations(prev => [...prev, newLocationObj]);
 
     // Input fields reset
@@ -48,12 +50,41 @@ export const LocationManagerPage = () => {
     setSelectedParentKey('');
   };
 
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this location?")) {
+      try {
+        setLocations(prevLocations => 
+          prevLocations.filter(loc => Number(loc.locationKey) !== Number(id))
+        );
+        alert("Location deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting location:", error);
+        alert("Failed to delete location.");
+      }
+    }
+  };
+
   return (
     <div style={{ display: 'flex', gap: '30px', padding: '20px', fontFamily: 'sans-serif' }}>
       
-      {/* Child Component: Receives data down as items prop */}
+      {/* Structural View Component displaying your fully customized grid dynamically */}
       <div style={{ width: '320px' }}>
-        <LocationTree items={locations} selectedId={null} onSelect={() => {}} />
+        <StructuralDashboard 
+          key={JSON.stringify(locations)} // 👈 Rebuilds layout and re-calculates elements upon state tracking array mutations
+          items={locations} // 👈 Injects updated flat configuration properties directly down to tree node processes
+          selectedId={null} 
+          onSelect={() => {}} 
+        />
+      </div>
+
+      {/* Child Component: Location Table with Delete functionality */}
+      <div style={{ flex: 1 }}>
+        <LocationTable 
+          locations={locations} 
+          loading={false} 
+          onEdit={(loc) => console.log('Edit clicked for:', loc)} 
+          onDelete={handleDelete} // Pass the delete function here
+        />
       </div>
 
       {/* Input Component Panel: Gathers input data upward */}

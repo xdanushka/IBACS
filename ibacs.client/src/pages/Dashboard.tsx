@@ -4,8 +4,6 @@ import { EquipmentManager } from '../components/EquipmentManager';
 import { LocationTree } from '../components/LocationTree';
 import StructuralDashboard from '../components/StructuralDashboard.tsx';
 
-
-
 interface LocationItem {
   locationKey: number;
   locationName: string;
@@ -26,15 +24,14 @@ const Dashboard: React.FC = () => {
   
   const [activeMiddleView, setActiveMiddleView] = useState<'liveData' | 'locationManager' | 'equipmentManager' | 'systemManager'>('liveData');
 
- // Temporary Hardcoded Mock Data Test inside Dashboard.tsx
-    useEffect(() => {
+  // Fetch the full dynamic layout array schema from database repository API
+  useEffect(() => {
     fetch('/api/Locations')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch location structural map.');
         return res.json();
       })
       .then((data) => {
-        
         setLocations(data);
       })
       .catch((err) => {
@@ -130,10 +127,13 @@ const Dashboard: React.FC = () => {
         {/* 🟩 Right Column: Location Hierarchical Navigation Tree */}
         <aside className="panel location-navigator">
           <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '15px' }}>Structural View</h3>
-          <StructuralDashboard />
+          <StructuralDashboard 
+            key={JSON.stringify(locations)} // Forces layout refresh smoothly inside browser whenever server inventory resets
+            items={locations} // Injects live dynamic array list straight down into tree branch configurations
+            selectedId={selectedLocation} // Highlights currently active golden state matching parameter
+            onSelect={handleLocationClick} // Triggers live sub-system rendering seamlessly upon column select clicks
+          />
         </aside>
-
-
 
       </div>
     </div>

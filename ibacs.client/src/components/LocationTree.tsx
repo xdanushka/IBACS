@@ -44,7 +44,8 @@ const buildRobustTree = (rawList: any[]): StandardizedNode[] => {
     const key = item.locationKey ?? item.location_key ?? item.LocationKey;
     const name = item.locationName ?? item.location_name ?? item.LocationName ?? 'Unknown';
     const fullName = item.fullName ?? item.full_name ?? item.FullName ?? name;
-    const parentKey = item.parentLocationKey ?? item.parent_location_key ?? item.ParentLocationKey ?? null;
+    const parentKey = item.parentLocationKey !== undefined ? item.parentLocationKey : (item.parent_location_key !== undefined ? item.parent_location_key : (item.ParentLocationKey !== undefined ? item.ParentLocationKey : null));
+
 
     if (key !== undefined && key !== null) {
       itemMap.set(Number(key), {
@@ -148,6 +149,19 @@ const RenderNodes: React.FC<RenderNodesProps> = ({
 export const LocationTree: React.FC<LocationTreeProps> = ({ items, selectedId, onSelect }) => {
   const treeData = useMemo(() => buildRobustTree(items), [items]);
   const [expandedNodes, setExpandedNodes] = useState<{ [key: number]: boolean }>({});
+    // Synchronize internal layout expansion states when external items array length changes
+  React.useEffect(() => {
+    setExpandedNodes(prev => {
+      const nextExpanded = { ...prev };
+      const currentKeys = new Set(items.map(i => i.locationKey ?? i.location_key ?? i.LocationKey));
+      Object.keys(nextExpanded).forEach(key => {
+        if (!currentKeys.has(Number(key))) {
+          delete nextExpanded[Number(key)];
+        }
+      });
+      return nextExpanded;
+    });
+  }, [items]);
 
   const handleToggleExpand = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
