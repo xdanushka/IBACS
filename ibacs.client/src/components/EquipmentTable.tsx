@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Cpu, Trash2, Edit3, MoreVertical, Layers, MapPin, Info, ChevronDown, ChevronRight, Plus, X, Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Cpu, Trash2, Edit3, MoreVertical, Layers, MapPin, Info, ChevronDown, ChevronRight, Plus, X, Check, Eye } from 'lucide-react';
 import { type Equipment, type Point, createPoint, updatePoint, deletePoint } from '../api/equipmentApi';
 import { Button } from './UI/Button';
 
@@ -162,7 +163,12 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                       <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors">
                         <Cpu size={16} />
                       </div>
-                      <span className="text-sm font-semibold text-slate-900 group-hover:translate-x-0.5 transition-transform">{eq.name}</span>
+                      <Link 
+                        to={`/equipment/${eq.equipmentKey}`} 
+                        className="text-sm font-semibold text-slate-900 hover:text-emerald-600 hover:underline transition-colors cursor-pointer group-hover:translate-x-0.5 transition-transform"
+                      >
+                        {eq.name}
+                      </Link>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -186,6 +192,13 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                     <div className="relative h-8 flex items-center justify-end">
                       {/* Hover Actions */}
                       <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+                        <Link
+                          to={`/equipment/${eq.equipmentKey}`}
+                          className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </Link>
                         <Button
                           variant="ghost"
                           size="icon"
