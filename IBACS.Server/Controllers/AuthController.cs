@@ -6,8 +6,6 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
-using System.Net;
-using System.Net.Mail;
 
 namespace IBACS.Server.Controllers
 {
@@ -16,88 +14,78 @@ namespace IBACS.Server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
-
-        // Record to store OTP and its expiration time
+        
+        // Data structure for OTP with expiry time
         private record OtpData(string Code, DateTime Expiry);
-
-        // In-memory storage for demonstration purposes (Use a Database for Production)
+        
+        // In-memory storage for Users and OTPs
         private static readonly ConcurrentDictionary<string, string> Users = new();
         private static readonly ConcurrentDictionary<string, OtpData> PendingOTPs = new();
 
         public AuthController(IConfiguration configuration)
         {
             _configuration = configuration;
-            // Pre-seed an admin user; hash password using BCrypt
-            if (!Users.ContainsKey("admin"))
-            {
-                Users.TryAdd("admin", BCrypt.Net.BCrypt.HashPassword("admin123"));
-            }
         }
 
+        // Register a new user
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] LoginModel model)
+        {
+            string username = model.Username.Trim().ToLower();
+            
+            // Check if user already exists
+            if (Users.ContainsKey(username))
+                return BadRequest(new { message = "Account already created with this email! Please try logging in." });
+
+            // Hash password and store the user
+            Users.TryAdd(username, BCrypt.Net.BCrypt.HashPassword(model.Password));
+            return Ok(new { message = "Account created successfully!" });
+        }
+
+        // Authenticate user and return JWT token
         [AllowAnonymous]
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginModel loginData)
         {
-            if (loginData == null || string.IsNullOrEmpty(loginData.Username) || string.IsNullOrEmpty(loginData.Password))
+            if (loginData == null || string.IsNullOrEmpty(loginData.Username))
                 return BadRequest(new { message = "Invalid input." });
 
             string username = loginData.Username.Trim().ToLower();
 
-            // Verify password using BCrypt
+            // Verify credentials against stored hash
             if (Users.TryGetValue(username, out string? storedHash) && BCrypt.Net.BCrypt.Verify(loginData.Password, storedHash))
                 return Ok(new { token = GenerateJwtToken(username), message = "Login successful!" });
 
-            return Unauthorized(new { message = "Invalid credentials!" });
+            return Unauthorized(new { message = "Invalid email or password!" });
         }
 
+        // Generate and send OTP for password recovery
         [AllowAnonymous]
         [HttpPost("send-otp")]
         public IActionResult SendOtp([FromBody] ResetPasswordModel model)
         {
-            if (!Users.ContainsKey(model.Username.ToLower()))
+            string username = model.Username.Trim().ToLower();
+            if (!Users.ContainsKey(username))
                 return NotFound(new { message = "User not found!" });
 
             string otp = new Random().Next(100000, 999999).ToString();
-            
-            // Set OTP expiry to 3 minutes
-            PendingOTPs[model.Username.ToLower()] = new OtpData(otp, DateTime.UtcNow.AddMinutes(3));
+            PendingOTPs[username] = new OtpData(otp, DateTime.UtcNow.AddMinutes(3));
 
-            try
-            {
-                var smtpHost = _configuration["Smtp:Host"];
-                var smtpUser = _configuration["Smtp:User"] ?? "noreply@ibacs.com";
-                
-                var smtpClient = new SmtpClient(smtpHost)
-                {
-                    Port = int.Parse(_configuration["Smtp:Port"] ?? "587"),
-                    Credentials = new NetworkCredential(smtpUser, _configuration["Smtp:Pass"]),
-                    EnableSsl = true,
-                };
-
-                var mailMessage = new MailMessage(smtpUser, model.Email, "Reset OTP", $"Your code: {otp}")
-                {
-                    IsBodyHtml = true
-                };
-
-                smtpClient.Send(mailMessage);
-                return Ok(new { message = "OTP sent. Valid for 3 minutes." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Email failed: " + ex.Message });
-            }
+            return Ok(new { message = "OTP generated successfully.", code = otp }); 
         }
 
+        // Verify the provided OTP
         [AllowAnonymous]
         [HttpPost("verify-otp")]
         public IActionResult VerifyOtp([FromBody] ResetPasswordModel model)
         {
-            if (PendingOTPs.TryGetValue(model.Username.ToLower(), out var otpData))
+            string username = model.Username.Trim().ToLower();
+            if (PendingOTPs.TryGetValue(username, out var otpData))
             {
-                // Check if OTP has expired
                 if (DateTime.UtcNow > otpData.Expiry)
                 {
-                    PendingOTPs.TryRemove(model.Username.ToLower(), out _);
+                    PendingOTPs.TryRemove(username, out _);
                     return BadRequest(new { message = "OTP expired!" });
                 }
 
@@ -107,7 +95,23 @@ namespace IBACS.Server.Controllers
             return BadRequest(new { message = "Invalid OTP!" });
         }
 
-        // Helper method to generate JWT Token
+        // Update existing password
+        [Authorize]
+        [HttpPost("change-password")]
+        public IActionResult ChangePassword([FromBody] ResetPasswordModel model)
+        {
+            var username = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (username == null || !Users.TryGetValue(username, out string? storedHash))
+                return NotFound(new { message = "User not found!" });
+
+            if (!BCrypt.Net.BCrypt.Verify(model.CurrentPassword, storedHash))
+                return BadRequest(new { message = "Current password is incorrect!" });
+
+            Users[username] = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            return Ok(new { message = "Password updated successfully!" });
+        }
+
+        // Utility to generate JWT token
         private string GenerateJwtToken(string username)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

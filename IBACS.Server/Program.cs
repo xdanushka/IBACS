@@ -13,14 +13,15 @@ namespace IBACS.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Add services to the container
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
+                    // Prevent circular reference errors in JSON serialization
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
 
-            // DbContext Registration for PostgreSQL
+            // DbContext Registration: Connecting to the PostgreSQL database
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -29,7 +30,7 @@ namespace IBACS.Server
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    // Validating the token using the secret key from appsettings
+                    // Validate token signature using the secret key
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
@@ -39,13 +40,14 @@ namespace IBACS.Server
                     };
                 });
 
+            // Swagger/OpenAPI support for API documentation
             builder.Services.AddSwaggerGen();
 
-            // CORS Policy
+            // CORS Policy: Updated to include port 5174 for React frontend
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowReactApp",
-                    policy => policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+                    policy => policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "http://localhost:5174", "https://localhost:5174")
                                     .AllowAnyMethod()
                                     .AllowAnyHeader()
                                     .AllowCredentials());
@@ -53,6 +55,7 @@ namespace IBACS.Server
 
             var app = builder.Build();
 
+            // Configure the HTTP request pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -60,15 +63,18 @@ namespace IBACS.Server
             }
             else
             {
+                // Force HTTPS in production
                 app.UseHttpsRedirection();
             }
 
+            // Apply the CORS policy
             app.UseCors("AllowReactApp");
 
-            // Critical Security Middleware Order
-            app.UseAuthentication(); // Must be called before Authorization
+            // Critical Security Middleware Order: Authentication must precede Authorization
+            app.UseAuthentication(); 
             app.UseAuthorization();
 
+            // Map API Controllers
             app.MapControllers();
 
             app.Run();
