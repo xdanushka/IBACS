@@ -80,7 +80,7 @@ const EquipmentPage = () => {
               {activeTab === 'equipment' ? <Cpu size={24} strokeWidth={2.5} /> : <Layers size={24} strokeWidth={2.5} />}
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {activeTab === 'equipment' ? 'Equipment Assets' : 'Equipment Categories'}
+              {activeTab === 'equipment' ? 'Equipment' : 'Equipment Categories'}
             </h1>
           </div>
           <p className="text-slate-500 font-medium whitespace-nowrap">
@@ -166,6 +166,7 @@ const EquipmentPage = () => {
             loading={loading} 
             onEdit={handleEditEquipment}
             onDelete={handleDeleteEquipment}
+            onRefresh={fetchData}
           />
         ) : (
           <EquipmentCategoryTable 

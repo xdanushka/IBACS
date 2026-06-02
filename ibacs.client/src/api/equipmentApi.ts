@@ -5,6 +5,13 @@ export interface EquipmentCategory {
   category: string;
 }
 
+export interface Point {
+  pointKey?: number;
+  equipmentKey: number;
+  name: string;
+  address?: string | null;
+}
+
 export interface Equipment {
   equipmentKey?: number;
   locationKey: number;
@@ -14,6 +21,7 @@ export interface Equipment {
   rtPageKey?: number | null;
   location?: { locationName: string; fullName?: string } | null;
   equipmentCategory?: { category: string } | null;
+  points?: Point[] | null;
 }
 
 const EQUIPMENT_BASE_URL = '/equipment';
@@ -52,5 +60,23 @@ export const getEquipmentCategories = async (): Promise<EquipmentCategory[]> => 
 
 export const createEquipmentCategory = async (category: Partial<EquipmentCategory>): Promise<EquipmentCategory> => {
   const response = await api.post<EquipmentCategory>(CATEGORY_BASE_URL, category);
+  return response.data;
+};
+
+// Points API
+const POINTS_BASE_URL = '/points';
+
+export const createPoint = async (point: Point): Promise<Point> => {
+  const response = await api.post<Point>(POINTS_BASE_URL, point);
+  return response.data;
+};
+
+export const updatePoint = async (id: number, point: Point): Promise<any> => {
+  const response = await api.put(`${POINTS_BASE_URL}/${id}`, point);
+  return response.data;
+};
+
+export const deletePoint = async (id: number): Promise<any> => {
+  const response = await api.delete(`${POINTS_BASE_URL}/${id}`);
   return response.data;
 };

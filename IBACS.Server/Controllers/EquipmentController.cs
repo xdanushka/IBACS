@@ -24,6 +24,7 @@ namespace IBACS.Server.Controllers
                 .Include(e => e.Location)
                 .Include(e => e.EquipmentCategory)
                 .Include(e => e.RTPage)
+                .Include(e => e.Points)
                 .ToListAsync();
         }
 
