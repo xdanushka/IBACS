@@ -4,6 +4,8 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Locations from './pages/Locations';
 import Login from './Login';
+import Equipment from './pages/Equipment';
+import EquipmentDetails from './pages/EquipmentDetails';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -20,11 +22,14 @@ function App() {
             <Route 
               path="/login" 
               element={!isAuthenticated ? <Login setAuth={setIsAuthenticated} /> : <Navigate to="/dashboard" />} 
+              
             />
             
             <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
             <Route path="/locations" element={isAuthenticated ? <Locations /> : <Navigate to="/login" />} />
-          </Routes>
+            <Route path="/equipment" element={<Equipment />} />
+            <Route path="/equipment/:id" element={<EquipmentDetails />} />
+          </Routes>  
         </main>
       </div>
     </Router>

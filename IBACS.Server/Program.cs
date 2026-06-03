@@ -12,6 +12,7 @@ namespace IBACS.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
 
             // Add services to the container
             builder.Services.AddControllers()
@@ -53,19 +54,23 @@ namespace IBACS.Server
                                     .AllowCredentials());
             });
 
-            var app = builder.Build();
+           
+var app = builder.Build();
 
-            // Configure the HTTP request pipeline
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-            else
-            {
-                // Force HTTPS in production
-                app.UseHttpsRedirection();
-            }
+
+app.UseCors("AllowReactApp");
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseHttpsRedirection();
+}
+
 
             // Apply the CORS policy
             app.UseCors("AllowReactApp");

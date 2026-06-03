@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBACS.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreationAndSetup : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -204,6 +204,12 @@ namespace IBACS.Server.Migrations
                 name: "IX_Locations_ParentLocationKey",
                 table: "Locations",
                 column: "ParentLocationKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LocationTypes_Name",
+                table: "LocationTypes",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Points_EquipmentKey",

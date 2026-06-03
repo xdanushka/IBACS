@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { Modal } from './UI/Modal';
 import { Input } from './UI/Input';
 import { Button } from './UI/Button';
-import locationService from '../api/locationService';
+import { createEquipmentCategory } from '../api/equipmentApi';
 import { Info } from 'lucide-react';
 
-interface AddLocationTypeModalProps {
+interface AddEquipmentCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const AddLocationTypeModal = ({ isOpen, onClose, onSuccess }: AddLocationTypeModalProps) => {
+const AddEquipmentCategoryModal = ({ isOpen, onClose, onSuccess }: AddEquipmentCategoryModalProps) => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +24,12 @@ const AddLocationTypeModal = ({ isOpen, onClose, onSuccess }: AddLocationTypeMod
     setError(null);
 
     try {
-      await locationService.addLocationType({ name: name.trim() });
+      await createEquipmentCategory({ category: name.trim() });
       setName('');
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to add location type. Ensure the name is unique.');
+      setError(err.response?.data?.message || 'Failed to add equipment category. Ensure the name is unique.');
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ const AddLocationTypeModal = ({ isOpen, onClose, onSuccess }: AddLocationTypeMod
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Location Type"
+      title="Add New Equipment Category"
       size="sm"
       footer={
         <>
@@ -47,7 +47,7 @@ const AddLocationTypeModal = ({ isOpen, onClose, onSuccess }: AddLocationTypeMod
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={loading || !name.trim()}>
-            {loading ? 'Adding...' : 'Add Type'}
+            {loading ? 'Adding...' : 'Add Category'}
           </Button>
         </>
       }
@@ -61,8 +61,8 @@ const AddLocationTypeModal = ({ isOpen, onClose, onSuccess }: AddLocationTypeMod
 
         <div className="space-y-1.5">
           <Input
-            label="Type Name"
-            placeholder="e.g. Building, Floor, Room, Wing"
+            label="Category Name"
+            placeholder="e.g. Chiller, AHU, Sensor, Fan, Pump"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -70,11 +70,11 @@ const AddLocationTypeModal = ({ isOpen, onClose, onSuccess }: AddLocationTypeMod
           />
         </div>
 
-        <div className="bg-primary-50/50 p-4 rounded-xl border border-primary-100 flex gap-3 text-xs text-primary-700 leading-relaxed">
+        <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex gap-3 text-xs text-emerald-700 leading-relaxed">
           <Info className="flex-shrink-0 mt-0.5" size={14} />
           <p>
-            Location types help categorize areas in your building. 
-            <strong> Names must be unique</strong> (e.g., you cannot have two types named "Floor").
+            Equipment categories classify your hardware devices. 
+            <strong> Names must be unique</strong> (e.g. you cannot have two categories named "Sensor").
           </p>
         </div>
       </form>
@@ -82,4 +82,4 @@ const AddLocationTypeModal = ({ isOpen, onClose, onSuccess }: AddLocationTypeMod
   );
 };
 
-export default AddLocationTypeModal;
+export default AddEquipmentCategoryModal;
