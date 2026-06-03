@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Locations from './pages/Locations';
+import Equipment from './pages/Equipment';
+import EquipmentDetails from './pages/EquipmentDetails';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/locations" element={<Locations />} />
+              <Route path="/equipment" element={<Equipment />} />
+              <Route path="/equipment/:id" element={<EquipmentDetails />} />
             </Routes>
           </div>
         </main>
