@@ -35,6 +35,7 @@ const SettingsDropdown = () => {
             <p className="text-sm font-semibold text-slate-800">System Settings</p>
             <p className="text-xs text-slate-500 mt-0.5">Manage building properties</p>
           </div>
+          
           <div className="py-2">
             
             {/* 1. Dashboard Link */}
