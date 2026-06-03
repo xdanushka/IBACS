@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Settings, MapPin, LayoutDashboard, ChevronRight, Cpu } from 'lucide-react';
+import { Settings, MapPin, LayoutDashboard, ChevronRight, Cpu, Sliders } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from './UI/Button';
 
@@ -20,6 +20,7 @@ const SettingsDropdown = () => {
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Locations', icon: MapPin, path: '/locations' },
+    { label: 'equipment', icon: Sliders, path: '/equipment' },
     { label: 'Systems', icon: Cpu, path: '/systems' },
   ];
 
@@ -41,9 +42,9 @@ const SettingsDropdown = () => {
             <p className="text-sm font-semibold text-slate-800">System Settings</p>
             <p className="text-xs text-slate-500 mt-0.5">Manage building properties</p>
           </div>
-          
+
           <div className="py-2">
-            
+
             {/* 1. Dashboard Link */}
             <Link
               to="/dashboard"
@@ -81,7 +82,7 @@ const SettingsDropdown = () => {
               to="/dashboard"
               onClick={() => {
                 setIsOpen(false); // Smoothly dismiss dropdown container viewport bounds instantly
-                
+
                 // Dispatches an atomic state payload upwards after view router navigation renders successfully
                 setTimeout(() => {
                   const event = new CustomEvent('changeMiddleView', { detail: 'equipmentManager' });
