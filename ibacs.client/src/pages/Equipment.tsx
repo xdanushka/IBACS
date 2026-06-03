@@ -41,7 +41,7 @@ const EquipmentPage = () => {
 
   const handleDeleteEquipment = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this equipment? This will fail if there are any data points attached.')) return;
-    
+
     try {
       await deleteEquipment(id);
       fetchData();
@@ -58,7 +58,7 @@ const EquipmentPage = () => {
   const filteredEquipment = equipment?.filter(eq => {
     const query = searchQuery.toLowerCase();
     return (
-      eq.name.toLowerCase().includes(query) || 
+      eq.name.toLowerCase().includes(query) ||
       (eq.description?.toLowerCase().includes(query) ?? false) ||
       (eq.equipmentCategory?.category.toLowerCase().includes(query) ?? false) ||
       (eq.location?.locationName.toLowerCase().includes(query) ?? false) ||
@@ -66,7 +66,7 @@ const EquipmentPage = () => {
     );
   });
 
-  const filteredCategories = categories?.filter(cat => 
+  const filteredCategories = categories?.filter(cat =>
     cat.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -98,7 +98,7 @@ const EquipmentPage = () => {
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             Refresh
           </Button>
-          
+
           {activeTab === 'equipment' ? (
             <Button
               onClick={() => { setEditingEquipment(null); setIsModalOpen(true); }}
@@ -123,22 +123,20 @@ const EquipmentPage = () => {
       <div className="flex p-1.5 bg-slate-100 rounded-2xl w-fit border border-slate-200 shadow-inner">
         <button
           onClick={() => { setActiveTab('equipment'); setSearchQuery(''); }}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${
-            activeTab === 'equipment' 
-              ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200 scale-100' 
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'equipment'
+              ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200 scale-100'
               : 'text-slate-500 hover:text-slate-700 hover:bg-white/50 scale-95 opacity-70'
-          }`}
+            }`}
         >
           <Cpu size={16} strokeWidth={activeTab === 'equipment' ? 2.5 : 2} />
           Equipment
         </button>
         <button
           onClick={() => { setActiveTab('categories'); setSearchQuery(''); }}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${
-            activeTab === 'categories' 
-              ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200 scale-100' 
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'categories'
+              ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200 scale-100'
               : 'text-slate-500 hover:text-slate-700 hover:bg-white/50 scale-95 opacity-70'
-          }`}
+            }`}
         >
           <Layers size={16} strokeWidth={activeTab === 'categories' ? 2.5 : 2} />
           Categories
@@ -161,17 +159,17 @@ const EquipmentPage = () => {
       {/* Tables Context */}
       <div className="animate-in slide-in-from-top-4 duration-500">
         {activeTab === 'equipment' ? (
-          <EquipmentTable 
-            equipment={filteredEquipment || []} 
-            loading={loading} 
+          <EquipmentTable
+            equipment={filteredEquipment || []}
+            loading={loading}
             onEdit={handleEditEquipment}
             onDelete={handleDeleteEquipment}
             onRefresh={fetchData}
           />
         ) : (
-          <EquipmentCategoryTable 
-            categories={filteredCategories || []} 
-            loading={loading} 
+          <EquipmentCategoryTable
+            categories={filteredCategories || []}
+            loading={loading}
           />
         )}
       </div>
