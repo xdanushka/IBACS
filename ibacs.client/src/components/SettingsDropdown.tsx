@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Settings, MapPin, LayoutDashboard, ChevronRight, Sliders } from 'lucide-react';
+import { Settings, MapPin, LayoutDashboard, ChevronRight, Cpu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from './UI/Button';
 
@@ -16,6 +16,12 @@ const SettingsDropdown = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const menuItems = [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Locations', icon: MapPin, path: '/locations' },
+    { label: 'Systems', icon: Cpu, path: '/systems' },
+  ];
 
   return (
     <div className="relative" ref={dropdownRef}>
