@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Settings, MapPin, LayoutDashboard, ChevronRight } from 'lucide-react';
+import { Settings, MapPin, LayoutDashboard, ChevronRight, Cpu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from './UI/Button';
 
@@ -19,6 +19,7 @@ const SettingsDropdown = () => {
 
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Equipment', icon: Cpu, path: '/equipment' },
     { label: 'Locations', icon: MapPin, path: '/locations' },
   ];
 
