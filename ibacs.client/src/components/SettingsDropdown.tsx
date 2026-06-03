@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Settings, MapPin, LayoutDashboard, ChevronRight } from 'lucide-react';
+import { Settings, MapPin, LayoutDashboard, ChevronRight, Cpu, Sliders } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from './UI/Button';
 
@@ -20,6 +20,8 @@ const SettingsDropdown = () => {
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Locations', icon: MapPin, path: '/locations' },
+    { label: 'equipment', icon: Sliders, path: '/equipment' },
+    { label: 'Systems', icon: Cpu, path: '/systems' },
   ];
 
   return (
@@ -40,7 +42,9 @@ const SettingsDropdown = () => {
             <p className="text-sm font-semibold text-slate-800">System Settings</p>
             <p className="text-xs text-slate-500 mt-0.5">Manage building properties</p>
           </div>
+
           <div className="py-2">
+
             {menuItems.map((item) => (
               <Link
                 key={item.path}
@@ -57,6 +61,7 @@ const SettingsDropdown = () => {
                 <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
               </Link>
             ))}
+
           </div>
         </div>
       )}

@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBACS.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260329101745_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260525152218_InitialCreationAndSetup")]
+    partial class InitialCreationAndSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -125,6 +125,9 @@ namespace IBACS.Server.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.HasKey("LocationTypeKey");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("LocationTypes");
                 });
