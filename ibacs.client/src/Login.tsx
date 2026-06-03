@@ -24,40 +24,50 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
     const [otpInput, setOtpInput] = useState(''); 
     const [newPassword, setNewPassword] = useState('');
 
-    // --- Helper function to clear errors ---
+    // --- Helper function to clear error and success messages ---
     const clearStatus = () => {
         setError('');
         setMessage('');
     };
 
+    // Redirect to dashboard if user is already authenticated
     useEffect(() => {
         if (localStorage.getItem('token') === 'true') {
             navigate('/dashboard');
         }
     }, [navigate]);
 
+    // --- Login Handler ---
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        clearStatus(); // Error clear 
+        clearStatus(); // Clear previous error or success messages
 
+        // Retrieve saved user credentials from localStorage
         const savedUser = localStorage.getItem('appUsername');
-        const savedPass = localStorage.getItem('appPassword');
+        const savedPass = localStorage.getItem('appPassword'); // Fetches the updated password set in ProfileDropdown
 
+        // Verify if entered credentials match the saved ones
         if (savedUser && username === savedUser && password === savedPass) {
-            localStorage.setItem('token', 'true');
-            localStorage.setItem('userEmail', username);
-            const namePart = username.split('@')[0];
-            localStorage.setItem('userName', namePart);
-            setAuth(true);
-            navigate('/dashboard');
+            localStorage.setItem('token', 'true'); // Set authentication token
+            localStorage.setItem('userEmail', username); // Store user email
+            
+            // Only set default name if no custom name exists
+            if (!localStorage.getItem('userName')) {
+                const namePart = username.split('@')[0];
+                localStorage.setItem('userName', namePart);
+            }
+
+            setAuth(true); // Update authentication state
+            navigate('/dashboard'); // Redirect to dashboard on successful login
         } else {
-            setError("Invalid email or password!");
+            setError("Invalid email or password!"); // Show error if credentials don't match
         }
     };
 
+    // --- Sign In Handler ---
     const handleSignIn = (e: React.FormEvent) => {
         e.preventDefault();
-        clearStatus(); // Error clear 
+        clearStatus();
 
         const existingUser = localStorage.getItem('appUsername');
         if (existingUser && username === existingUser) {
@@ -80,15 +90,15 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
         localStorage.setItem('appUsername', username);
         localStorage.setItem('appPassword', password);
         localStorage.setItem('userEmail', username);
-        localStorage.setItem('userName', username.split('@')[0]);
-
+        
         setMessage("Account created! Please Login.");
         setForgotStep('none');
     };
 
+    // --- OTP Handler ---
     const handleSendOtp = (e: React.FormEvent) => {
         e.preventDefault();
-        clearStatus(); // Error clear
+        clearStatus();
         const savedUser = localStorage.getItem('appUsername');
         
         if (!resetEmail || resetEmail !== savedUser) {
@@ -108,7 +118,7 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
 
     const verifyOtp = (e: React.FormEvent) => {
         e.preventDefault();
-        clearStatus(); // Error clear 
+        clearStatus();
         if (otp === otpInput) {
             setForgotStep('reset');
         } else {
