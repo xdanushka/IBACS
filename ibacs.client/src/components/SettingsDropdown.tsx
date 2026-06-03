@@ -41,23 +41,65 @@ const SettingsDropdown = () => {
             <p className="text-sm font-semibold text-slate-800">System Settings</p>
             <p className="text-xs text-slate-500 mt-0.5">Manage building properties</p>
           </div>
+          
           <div className="py-2">
-            {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-between px-4 py-3 text-sm text-slate-600 hover:bg-primary-50 hover:text-primary-700 transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-primary-100 transition-colors">
-                    <item.icon size={16} />
-                  </div>
-                  <span className="font-medium text-slate-700 group-hover:text-primary-800">{item.label}</span>
+            
+            {/* 1. Dashboard Link */}
+            <Link
+              to="/dashboard"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center justify-between px-4 py-3 text-sm text-slate-600 hover:bg-primary-50 hover:text-primary-700 transition-all group text-none"
+              style={{ textDecoration: 'none' }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-primary-100 transition-colors">
+                  <LayoutDashboard size={16} />
                 </div>
-                <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-              </Link>
-            ))}
+                <span className="font-medium text-slate-700 group-hover:text-primary-800">Dashboard</span>
+              </div>
+              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </Link>
+
+            {/* 2. Locations Link */}
+            <Link
+              to="/locations"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center justify-between px-4 py-3 text-sm text-slate-600 hover:bg-primary-50 hover:text-primary-700 transition-all group"
+              style={{ textDecoration: 'none' }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-primary-100 transition-colors">
+                  <MapPin size={16} />
+                </div>
+                <span className="font-medium text-slate-700 group-hover:text-primary-800">Locations</span>
+              </div>
+              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </Link>
+
+            {/* 3. 🛠️ NEW: Equipment Manager Router Action Link directly nested beneath Locations layout */}
+            <Link
+              to="/dashboard"
+              onClick={() => {
+                setIsOpen(false); // Smoothly dismiss dropdown container viewport bounds instantly
+                
+                // Dispatches an atomic state payload upwards after view router navigation renders successfully
+                setTimeout(() => {
+                  const event = new CustomEvent('changeMiddleView', { detail: 'equipmentManager' });
+                  window.dispatchEvent(event);
+                }, 100);
+              }}
+              className="flex items-center justify-between px-4 py-3 text-sm text-slate-600 hover:bg-primary-50 hover:text-primary-700 transition-all group"
+              style={{ textDecoration: 'none' }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-primary-100 transition-colors">
+                  <Sliders size={16} />
+                </div>
+                <span className="font-medium text-slate-700 group-hover:text-primary-800">Equipment Manager</span>
+              </div>
+              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </Link>
+
           </div>
         </div>
       )}

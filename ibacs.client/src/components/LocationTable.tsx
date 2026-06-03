@@ -79,14 +79,17 @@ const LocationTable = ({ locations, loading, onEdit, onDelete }: LocationTablePr
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <div className="relative h-8 flex items-center justify-end">
-                    {/* Hover Actions */}
-                    <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+                                    <div className="relative h-8 flex items-center justify-end">
+                    {/* Hover Actions Panel - Removed blocking pointer event classes */}
+                    <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-100 rounded-lg transition-colors"
-                        onClick={() => onEdit(loc)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(loc);
+                        }}
                       >
                         <Edit3 size={16} />
                       </Button>
@@ -94,11 +97,15 @@ const LocationTable = ({ locations, loading, onEdit, onDelete }: LocationTablePr
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        onClick={() => onDelete(loc.locationKey!)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Stops the cascading row events from swallowing clicks
+                          onDelete(loc.locationKey!);
+                        }}
                       >
                         <Trash2 size={16} />
                       </Button>
                     </div>
+
                     {/* Default Icon */}
                     <div className="text-slate-300 opacity-100 group-hover:opacity-0 group-hover:-translate-y-2 transition-all duration-300">
                       <MoreVertical size={16} />

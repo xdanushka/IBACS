@@ -1,0 +1,164 @@
+/* Ensure the absolute container cannot extend past the screen edges */
+.ibacs-container {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Force header to be bounded perfectly */
+.ibacs-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background-color: #cbd5e1 !important;
+  padding: 14px 20px !important;
+  border-bottom: 2px solid #475569 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.header-title {
+  font-weight: bold !important;
+  font-size: 16px !important;
+  color: #0f172a !important;
+}
+
+.settings-wrapper {
+  position: relative !important;
+}
+
+.settings-btn {
+  background-color: #475569 !important;
+  color: white !important;
+  border: none !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  border-radius: 4px !important;
+}
+
+/* Flexible and perfectly bounded horizontal row alignment rules */
+.ibacs-main-layout {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: calc(100vh - 140px) !important; /* Adjusted to give breathing room for your custom top navbars */
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Structural definitions for the inner view panels */
+.panel {
+  background: white !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 16px !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  height: 100% !important;
+}
+
+/* Strictly sizing the layout elements to avoid off-screen horizontal pushing */
+.subsystem-navigator {
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+  background-color: #f0f4f8 !important;
+}
+
+.rt-page-view {
+  flex: 1 !important;
+  background-color: #fefaf0 !important;
+}
+
+.location-navigator {
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+  background-color: #f4f7f4 !important;
+}
+
+.panel h3 {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  margin-top: 0 !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+.nav-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.location-nav-item, .system-nav-item {
+  padding: 10px 14px !important;
+  margin-bottom: 8px !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.location-nav-item.active {
+  background-color: #2563eb !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.placeholder-text {
+  color: #64748b !important;
+  font-style: italic !important;
+  font-size: 13px !important;
+}
+
+/* Configuration Dropdown Box Section (Added Below) */
+.settings-dropdown {
+  position: absolute !important;
+  right: 0 !important;
+  top: 40px !important;
+  background: #ffffff !important;
+  border: 1px solid #94a3b8 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 180px !important;
+  padding: 10px !important;
+  gap: 8px !important;
+  z-index: 9999 !important;
+}
+
+.settings-dropdown button {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 8px 12px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease-in-out !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.settings-dropdown button:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #475569 !important;
+  color: #0f172a !important;
+}
