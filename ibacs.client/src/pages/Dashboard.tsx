@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
     <div className="ibacs-container">
       <div className="ibacs-main-layout">
         
-        {/* 🔹 Left Column: Subsystem Navigator */}
+        {/* Left Column: Subsystem Navigator */}
         <aside className="panel subsystem-navigator">
           <h3>Subsystem Navigator</h3>
           {selectedLocation === null ? (
@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
           )}
         </aside>
 
-        {/* 🔸 Center Canvas Column: Active RT Page View */}
+        {/*Center Canvas Column: Active RT Page View */}
         <main className="panel rt-page-view">
           <h3>RT Page View</h3>
           
@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
           )}
         </main>
 
-        {/* 🟩 Right Column: Location Hierarchical Navigation Tree */}
+        {/*Right Column: Location Hierarchical Navigation Tree */}
         <aside className="panel location-navigator">
           <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '15px' }}>Structural View</h3>
           <StructuralDashboard 

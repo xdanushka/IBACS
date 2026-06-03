@@ -41,7 +41,7 @@
   border-radius: 4px !important;
 }
 
-/* 📊 Flexible and perfectly bounded horizontal row alignment rules */
+/* Flexible and perfectly bounded horizontal row alignment rules */
 .ibacs-main-layout {
   display: flex !important;
   flex-direction: row !important;
@@ -125,9 +125,7 @@
   font-size: 13px !important;
 }
 
-/* ==========================================================================
-   ⚙️ Configuration Dropdown Box Section (Added Below)
-   ========================================================================== */
+/* Configuration Dropdown Box Section (Added Below) */
 .settings-dropdown {
   position: absolute !important;
   right: 0 !important;
