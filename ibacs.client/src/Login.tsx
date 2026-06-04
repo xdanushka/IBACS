@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, Lock, Mail, Key } from 'lucide-react';
+import { LayoutDashboard, User, Lock, Mail, Key, Eye, EyeOff } from 'lucide-react'; // Imported Eye and EyeOff icons
 import './Login.css';
 import emailjs from '@emailjs/browser';
 
@@ -16,6 +16,9 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    
+    // State to toggle password visibility
+    const [showPassword, setShowPassword] = useState(false);
     
     // Tracks the current UI step
     const [forgotStep, setForgotStep] = useState<'none' | 'email' | 'otp' | 'reset' | 'SignIn'>('none');
@@ -145,7 +148,13 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                 {forgotStep === 'none' && (
                     <form className="login-form" onSubmit={handleLogin}>
                         <div className="input-group"><User className="input-icon" size={20} /><input type="email" placeholder="Email Address" value={username} onChange={(e) => {setUsername(e.target.value); clearStatus();}} required /></div>
-                        <div className="input-group"><Lock className="input-icon" size={20} /><input type="password" placeholder="Password" value={password} onChange={(e) => {setPassword(e.target.value); clearStatus();}} required /></div>
+                        <div className="input-group">
+                            <Lock className="input-icon" size={20} />
+                            <input type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e) => {setPassword(e.target.value); clearStatus();}} required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </button>
+                        </div>
                         <div style={{ textAlign: 'right', marginBottom: '15px' }}>
                             <a href="#" onClick={(e) => { e.preventDefault(); clearStatus(); setForgotStep('email'); }} style={{ color: '#007bff', fontSize: '14px', textDecoration: 'none' }}>Forgot Password?</a>
                         </div>
@@ -163,13 +172,16 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                         <div className="input-group">
                             <Lock className="input-icon" size={20} />
                             <input 
-                                type="password" 
+                                type={showPassword ? "text" : "password"} 
                                 placeholder="Set Password" 
                                 onChange={(e) => {setPassword(e.target.value); clearStatus();}} 
                                 onMouseEnter={() => setIsHovered(true)} 
                                 onMouseLeave={() => setIsHovered(false)} 
                                 required 
                             />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </button>
                         </div>
                         {/* Requirement Tooltip */}
                         {isHovered && (
@@ -217,7 +229,10 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     }}>
                         <div className="input-group">
                             <Lock className="input-icon" size={20} />
-                            <input type="password" placeholder="New Password" value={newPassword} onChange={(e) => {setNewPassword(e.target.value); clearStatus();}} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} required />
+                            <input type={showPassword ? "text" : "password"} placeholder="New Password" value={newPassword} onChange={(e) => {setNewPassword(e.target.value); clearStatus();}} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </button>
                         </div>
                         {isHovered && (
                              <div className="pwd-req-box">
