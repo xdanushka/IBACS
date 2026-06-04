@@ -20,7 +20,7 @@ const SettingsDropdown = () => {
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Locations', icon: MapPin, path: '/locations' },
-    { label: 'equipment', icon: Sliders, path: '/equipment' },
+    { label: 'Equipment', icon: Sliders, path: '/equipment' },
     { label: 'Systems', icon: Cpu, path: '/systems' },
   ];
 
