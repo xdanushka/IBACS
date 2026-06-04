@@ -16,7 +16,7 @@ namespace IBACS.Server.Controllers
             _context = context;
         }
 
-                // GET: api/Locations
+        // GET: api/Locations
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Location>>> GetLocations()
         {
@@ -27,16 +27,11 @@ namespace IBACS.Server.Controllers
                 .ToListAsync();
         }
 
-
         // GET: api/Locations/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Location>> GetLocation(int id)
+        [HttpGet("{locationKey}")]
+        public async Task<ActionResult<Location>> GetLocation(int locationKey)
         {
-            var location = await _context.Locations
-                .Include(l => l.LocationType)
-                .Include(l => l.ParentLocation)
-                .Include(l => l.ChildLocations)
-                .FirstOrDefaultAsync(l => l.LocationKey == id);
+            var location = await _context.Locations.FindAsync(locationKey);
 
             if (location == null)
             {
@@ -44,6 +39,21 @@ namespace IBACS.Server.Controllers
             }
 
             return location;
+        }
+
+        // GET: api/Locations/5/systems
+        [HttpGet("{locationKey}/systems")]
+        public async Task<ActionResult<IEnumerable<object>>> GetSystemsByLocation(int locationKey)
+        {
+            var systems = await _context.Systems
+                .Where(s => s.LocationKey == locationKey) 
+                .Select(s => new {
+                    SystemKey = s.SystemKey,
+                    Name = s.Name
+                })
+                .ToListAsync();
+
+            return Ok(systems);
         }
 
         // POST: api/Locations
@@ -85,7 +95,6 @@ namespace IBACS.Server.Controllers
             if (pathChanged)
             {
                 existingLocation.FullName = await CalculateFullName(existingLocation);
-                // Also update all children recursively
                 await UpdateChildrenFullNames(existingLocation);
             }
 
@@ -123,13 +132,11 @@ namespace IBACS.Server.Controllers
                 return NotFound();
             }
 
-            // Validate: No Child Locations
             if (location.ChildLocations.Any())
             {
                 return BadRequest(new { message = "Cannot delete this location because it contains sub-locations (children). Please delete or move the sub-locations first." });
             }
 
-            // Validate: No Equipment or Systems
             if (location.Equipments.Any() || location.Systems.Any())
             {
                 return BadRequest(new { message = "Cannot delete this location because it has equipment or systems assigned to it. Please remove them first." });
@@ -171,7 +178,7 @@ namespace IBACS.Server.Controllers
             foreach (var child in children)
             {
                 child.FullName = $"{parent.FullName}. {child.LocationName}";
-                await UpdateChildrenFullNames(child); // Recurse
+                await UpdateChildrenFullNames(child); 
             }
         }
     }
