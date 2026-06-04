@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { User, LogOut, Pencil, KeyRound } from 'lucide-react';
 
-  const ProfileDropdown = () => {
+const ProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false); // State for password change mode
   
   // State for password fields
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [isHovered, setIsHovered] = useState(false); // State for password requirements tooltip
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +91,30 @@ import { User, LogOut, Pencil, KeyRound } from 'lucide-react';
             {isChangingPassword ? (
               <div className="space-y-3">
                 <input type="password" placeholder="Current Password" onChange={(e) => setPasswords({...passwords, current: e.target.value})} className="w-full border rounded-lg p-2 text-sm" />
-                <input type="password" placeholder="New Password" onChange={(e) => setPasswords({...passwords, new: e.target.value})} className="w-full border rounded-lg p-2 text-sm" />
+                
+                {/* New Password field with Requirement Tooltip */}
+                <div className="relative">
+                  <input 
+                    type="password" 
+                    placeholder="New Password" 
+                    onChange={(e) => setPasswords({...passwords, new: e.target.value})} 
+                    onMouseEnter={() => setIsHovered(true)} 
+                    onMouseLeave={() => setIsHovered(false)} 
+                    className="w-full border rounded-lg p-2 text-sm" 
+                  />
+                  {isHovered && (
+                    <div className="absolute left-0 mt-2 p-3 bg-white border border-blue-500 rounded-lg shadow-xl z-[60] w-full text-xs">
+                      <p className="font-bold mb-1">Password must contain:</p>
+                      <ul className="list-none p-0 m-0">
+                        <li className={passwords.new.length >= 8 ? 'text-green-600' : 'text-red-500'}>• 8+ characters</li>
+                        <li className={/[A-Z]/.test(passwords.new) ? 'text-green-600' : 'text-red-500'}>• 1 Capital letter</li>
+                        <li className={/\d/.test(passwords.new) ? 'text-green-600' : 'text-red-500'}>• 1 Number</li>
+                        <li className={/[@$!%*#?&]/.test(passwords.new) ? 'text-green-600' : 'text-red-500'}>• 1 Special character</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
                 <input type="password" placeholder="Confirm Password" onChange={(e) => setPasswords({...passwords, confirm: e.target.value})} className="w-full border rounded-lg p-2 text-sm" />
                 
                 {/* Save Password Button */}
