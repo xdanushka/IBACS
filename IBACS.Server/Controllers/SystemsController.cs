@@ -22,6 +22,9 @@ namespace IBACS.Server.Controllers
         {
             return await _context.Systems
                 .Include(s => s.Location)
+                .Include(s => s.SystemPoints)
+                    .ThenInclude(sp => sp.Point)
+                        .ThenInclude(p => p.Equipment)
                 .OrderBy(s => s.Name)
                 .ToListAsync();
         }
