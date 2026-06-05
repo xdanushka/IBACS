@@ -71,8 +71,9 @@ const Dashboard: React.FC = () => {
 
   const handleLocationClick = (locationKey: number) => {
     setSelectedLocation(locationKey);
-    setActiveMiddleView('liveData');
-    setSelectedSystemKey(null); // Reset selected system
+    
+    // Automatically switch the active middle view canvas layout to equipment manager screen
+    setActiveMiddleView('equipmentManager');
     
     fetch(`/api/locations/${locationKey}/systems`)
       .then((res) => res.json())
@@ -157,36 +158,71 @@ const Dashboard: React.FC = () => {
       <div className="ibacs-main-layout">
         
         {/* Left Column: Subsystem Navigator */}
-        <aside className="panel subsystem-navigator">
-          <h3>Subsystem Navigator</h3>
+                {/* Left Column: Subsystem Navigator */}
+        <aside className="panel subsystem-navigator" style={{ background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a', margin: 0, borderBottom: '2px solid #3b82f6', paddingBottom: '8px', letterSpacing: '0.5px' }}>Subsystem Navigator</h3>
+          
           {selectedLocation === null ? (
-            <p className="placeholder-text">Please select a location to view its systems.</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '20px', border: '1px dashed #cbd5e1', borderRadius: '8px', background: '#ffffff' }}>
+              <p style={{ color: '#64748b', fontSize: '13px', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>Please select a location to view its systems.</p>
+            </div>
           ) : systems.length > 0 ? (
-            <ul className="nav-list">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {systems.map((sys) => (
-                <li
-                  key={sys.systemKey}
-                  className={`system-nav-item ${selectedSystemKey === sys.systemKey ? 'active' : ''}`}
-                  onClick={() => setSelectedSystemKey(sys.systemKey)}
+                <div 
+                  key={sys.systemKey} 
+                  style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px', 
+                    background: '#ffffff', 
+                    color: '#1e293b', 
+                    borderRadius: '8px', 
+                    fontSize: '13px', 
+                    fontWeight: '600',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#eff6ff';
+                    e.currentTarget.style.borderColor = '#bfdbfe';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                  }}
                 >
-                  ⚙️ {sys.name}
-                </li>
+                  {/* Visual Indicator Dot */}
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6', display: 'inline-block', flexShrink: 0 }}></span>
+                  
+                  <span style={{ textTransform: 'capitalize' }}>{sys.name}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className="error-text">No systems available for this location.</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '20px', border: '1px dashed #fca5a5', borderRadius: '8px', background: '#fef2f2' }}>
+              <p style={{ color: '#ef4444', fontSize: '13px', fontWeight: '500', margin: 0, textAlign: 'center' }}>No systems available for this location.</p>
+            </div>
           )}
         </aside>
 
-        {/*Center Canvas Column: Active RT Page View */}
+
+        {/* Center Canvas Column: Active RT Page View */}
         <main className="panel rt-page-view">
           <h3>RT Page View</h3>
           
           {activeMiddleView === 'locationManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>&larr; Back to Live View</button>
               <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
-                <h4 style={{ marginTop: 0 }}>🏢 Location Manager</h4>
+                <h4 style={{ marginTop: 0 }}>Location Manager</h4>
                 <p style={{ color: '#64748b', fontSize: '13px' }}>Location configuration and hierarchical tree forms will render here.</p>
               </div>
             </div>
@@ -194,16 +230,18 @@ const Dashboard: React.FC = () => {
 
           {activeMiddleView === 'equipmentManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
-              <EquipmentManager />
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>&larr; Back to Live View</button>
+              
+              {/* Pass the selected location ID parameter straight down into the Equipment Manager prop filter */}
+              <EquipmentManager selectedLocationId={selectedLocation || undefined} />
             </div>
           )}
 
           {activeMiddleView === 'systemManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>&larr; Back to Live View</button>
               <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
-                <h4 style={{ marginTop: 0 }}>⚙️ System Manager</h4>
+                <h4 style={{ marginTop: 0 }}>System Manager</h4>
                 <p style={{ color: '#64748b', fontSize: '13px' }}>Automation subsystem loops and logical network tags will render here.</p>
               </div>
             </div>
@@ -346,14 +384,14 @@ const Dashboard: React.FC = () => {
           )}
         </main>
 
-        {/*Right Column: Location Hierarchical Navigation Tree */}
+        {/* Right Column: Location Hierarchical Navigation Tree */}
         <aside className="panel location-navigator">
           <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '15px' }}>Structural View</h3>
           <StructuralDashboard 
-            key={JSON.stringify(locations)} // Forces layout refresh smoothly inside browser whenever server inventory resets
-            items={locations} // Injects live dynamic array list straight down into tree branch configurations
-            selectedId={selectedLocation} // Highlights currently active golden state matching parameter
-            onSelect={handleLocationClick} // Triggers live sub-system rendering seamlessly upon column select clicks
+            key={JSON.stringify(locations)} 
+            items={locations} 
+            selectedId={selectedLocation} 
+            onSelect={handleLocationClick} 
           />
         </aside>
 

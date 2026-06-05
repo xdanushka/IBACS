@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, Lock, Mail, Key } from 'lucide-react';
+import { LayoutDashboard, User, Lock, Mail, Key, Eye, EyeOff } from 'lucide-react'; // Imported Eye and EyeOff icons
 import './Login.css';
 import emailjs from '@emailjs/browser';
 
@@ -11,20 +11,27 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ setAuth }) => {
     const navigate = useNavigate();
     
+    // --- State Management ---
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    
+    // State to toggle password visibility
+    const [showPassword, setShowPassword] = useState(false);
+    
+    // Tracks the current UI step
     const [forgotStep, setForgotStep] = useState<'none' | 'email' | 'otp' | 'reset' | 'SignIn'>('none');
     
-    const [ , setIsHovered] = useState(false);
-    const [ , setOtpTime] = useState<number | null>(null);
+    // UI state for password requirement tooltip and OTP management
+    const [isHovered, setIsHovered] = useState(false);
+    const [_otpTime, setOtpTime] = useState<number | null>(null);
     const [resetEmail, setResetEmail] = useState('');
     const [otp, setOtp] = useState(''); 
     const [otpInput, setOtpInput] = useState(''); 
     const [newPassword, setNewPassword] = useState('');
 
-    // --- Helper function to clear error and success messages ---
+    // Clear error and success messages
     const clearStatus = () => {
         setError('');
         setMessage('');
@@ -37,34 +44,31 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
         }
     }, [navigate]);
 
-    // --- Login Handler ---
+    // --- Login Logic ---
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        clearStatus(); // Clear previous error or success messages
+        clearStatus();
 
-        // Retrieve saved user credentials from localStorage
         const savedUser = localStorage.getItem('appUsername');
-        const savedPass = localStorage.getItem('appPassword'); // Fetches the updated password set in ProfileDropdown
+        const savedPass = localStorage.getItem('appPassword');
 
-        // Verify if entered credentials match the saved ones
         if (savedUser && username === savedUser && password === savedPass) {
-            localStorage.setItem('token', 'true'); // Set authentication token
-            localStorage.setItem('userEmail', username); // Store user email
+            localStorage.setItem('token', 'true');
+            localStorage.setItem('userEmail', username);
             
-            // Only set default name if no custom name exists
             if (!localStorage.getItem('userName')) {
                 const namePart = username.split('@')[0];
                 localStorage.setItem('userName', namePart);
             }
 
-            setAuth(true); // Update authentication state
-            navigate('/dashboard'); // Redirect to dashboard on successful login
+            setAuth(true);
+            navigate('/dashboard');
         } else {
-            setError("Invalid email or password!"); // Show error if credentials don't match
+            setError("Invalid email or password!");
         }
     };
 
-    // --- Sign In Handler ---
+    // --- Sign In / Registration Logic ---
     const handleSignIn = (e: React.FormEvent) => {
         e.preventDefault();
         clearStatus();
@@ -95,7 +99,7 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
         setForgotStep('none');
     };
 
-    // --- OTP Handler ---
+    // --- OTP Generation Logic ---
     const handleSendOtp = (e: React.FormEvent) => {
         e.preventDefault();
         clearStatus();
@@ -140,10 +144,17 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                 {message && <p style={{ color: "green", textAlign: 'center', fontSize: '14px' }}>{message}</p>}
                 {error && <p className="error-text" style={{ color: "red", textAlign: 'center' }}>{error}</p>}
 
+                {/* Login Form */}
                 {forgotStep === 'none' && (
                     <form className="login-form" onSubmit={handleLogin}>
                         <div className="input-group"><User className="input-icon" size={20} /><input type="email" placeholder="Email Address" value={username} onChange={(e) => {setUsername(e.target.value); clearStatus();}} required /></div>
-                        <div className="input-group"><Lock className="input-icon" size={20} /><input type="password" placeholder="Password" value={password} onChange={(e) => {setPassword(e.target.value); clearStatus();}} required /></div>
+                        <div className="input-group">
+                            <Lock className="input-icon" size={20} />
+                            <input type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e) => {setPassword(e.target.value); clearStatus();}} required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </button>
+                        </div>
                         <div style={{ textAlign: 'right', marginBottom: '15px' }}>
                             <a href="#" onClick={(e) => { e.preventDefault(); clearStatus(); setForgotStep('email'); }} style={{ color: '#007bff', fontSize: '14px', textDecoration: 'none' }}>Forgot Password?</a>
                         </div>
@@ -154,18 +165,42 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     </form>
                 )}
 
+                {/* Sign In / Register Form */}
                 {forgotStep === 'SignIn' && (
                     <form className="login-form" onSubmit={handleSignIn}>
                         <div className="input-group"><User className="input-icon" size={20} /><input type="email" placeholder="Enter your email" onChange={(e) => {setUsername(e.target.value); clearStatus();}} required /></div>
                         <div className="input-group">
                             <Lock className="input-icon" size={20} />
-                            <input type="password" placeholder="Set Password" onChange={(e) => {setPassword(e.target.value); clearStatus();}} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} required />
+                            <input 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="Set Password" 
+                                onChange={(e) => {setPassword(e.target.value); clearStatus();}} 
+                                onMouseEnter={() => setIsHovered(true)} 
+                                onMouseLeave={() => setIsHovered(false)} 
+                                required 
+                            />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </button>
                         </div>
+                        {/* Requirement Tooltip */}
+                        {isHovered && (
+                            <div className="pwd-req-box">
+                                <p style={{ margin: '0 0 5px 0', fontSize: '12px', fontWeight: 'bold' }}>Password must contain:</p>
+                                <ul className="req-list">
+                                    <li className={password.length >= 8 ? 'valid' : 'invalid'}>• 8+ characters</li>
+                                    <li className={/[A-Z]/.test(password) ? 'valid' : 'invalid'}>• 1 Capital letter</li>
+                                    <li className={/\d/.test(password) ? 'valid' : 'invalid'}>• 1 Number</li>
+                                    <li className={/[@$!%*#?&]/.test(password) ? 'valid' : 'invalid'}>• 1 Special character</li>
+                                </ul>
+                            </div>
+                        )}
                         <button type="submit" className="login-btn">SIGN IN</button>
                         <button type="button" className="back-btn" onClick={() => {clearStatus(); setForgotStep('none');}}>Back</button>
                     </form>
                 )}
 
+                {/* Password Reset Steps */}
                 {forgotStep === 'email' && (
                     <form className="login-form" onSubmit={handleSendOtp}>
                         <div className="input-group"><Mail className="input-icon" size={20} /><input type="email" placeholder="Enter Email" value={resetEmail} onChange={(e) => {setResetEmail(e.target.value); clearStatus();}} required /></div>
@@ -194,8 +229,22 @@ const Login: React.FC<LoginProps> = ({ setAuth }) => {
                     }}>
                         <div className="input-group">
                             <Lock className="input-icon" size={20} />
-                            <input type="password" placeholder="New Password" value={newPassword} onChange={(e) => {setNewPassword(e.target.value); clearStatus();}} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} required />
+                            <input type={showPassword ? "text" : "password"} placeholder="New Password" value={newPassword} onChange={(e) => {setNewPassword(e.target.value); clearStatus();}} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                            </button>
                         </div>
+                        {isHovered && (
+                             <div className="pwd-req-box">
+                                <p style={{ margin: '0 0 5px 0', fontSize: '12px', fontWeight: 'bold' }}>Password must contain:</p>
+                                <ul className="req-list">
+                                    <li className={newPassword.length >= 8 ? 'valid' : 'invalid'}>• 8+ characters</li>
+                                    <li className={/[A-Z]/.test(newPassword) ? 'valid' : 'invalid'}>• 1 Capital letter</li>
+                                    <li className={/\d/.test(newPassword) ? 'valid' : 'invalid'}>• 1 Number</li>
+                                    <li className={/[@$!%*#?&]/.test(newPassword) ? 'valid' : 'invalid'}>• 1 Special character</li>
+                                </ul>
+                            </div>
+                        )}
                         <button type="submit" className="login-btn">RESET PASSWORD</button>
                         <button type="button" className="back-btn" onClick={() => {clearStatus(); setForgotStep('otp');}}>Back</button>
                     </form>
