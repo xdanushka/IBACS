@@ -32,5 +32,27 @@ namespace IBACS.Server.Controllers
 
             return CreatedAtAction(nameof(GetLocationTypes), new { id = locationType.LocationTypeKey }, locationType);
         }
+        // DELETE: api/LocationTypes/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteLocationType(int id)
+        {
+            var locationType = await _context.LocationTypes.FindAsync(id);
+            if (locationType == null)
+            {
+                return NotFound();
+            }
+
+            // Check if it's in use by any Location
+            bool isInUse = await _context.Locations.AnyAsync(l => l.LocationTypeKey == id);
+            if (isInUse)
+            {
+                return BadRequest(new { message = "Cannot delete location type because it is currently in use by one or more locations." });
+            }
+
+            _context.LocationTypes.Remove(locationType);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
