@@ -16,7 +16,6 @@ namespace IBACS.Server.Controllers
             _context = context;
         }
 
-        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> GetEquipments()
         {
@@ -27,13 +26,31 @@ namespace IBACS.Server.Controllers
                     EquipmentKey = e.EquipmentKey,
                     Name = e.Name,
                     Description = e.Description,
-CategoryName = e.EquipmentCategory != null ? e.EquipmentCategory.ToString() : "Unknown",
+                    CategoryName = e.EquipmentCategory != null ? e.EquipmentCategory.Category : "Unknown",
                     LocationName = e.Location != null ? e.Location.LocationName : "Unknown"
                 })
                 .ToListAsync();
         }
 
-        
+        [HttpGet("/api/equipments/by-location/{locationId}")]
+        public async Task<ActionResult<IEnumerable<object>>> GetEquipmentsByLocation(int locationId)
+        {
+            var equipments = await _context.Equipments
+                .Include(e => e.EquipmentCategory)
+                .Include(e => e.Location)
+                .Where(e => e.LocationKey == locationId) 
+                .Select(e => new {
+                    EquipmentKey = e.EquipmentKey,
+                    Name = e.Name,
+                    Description = e.Description,
+                    CategoryName = e.EquipmentCategory != null ? e.EquipmentCategory.Category : "Unknown",
+                    LocationName = e.Location != null ? e.Location.LocationName : "Unknown"
+                })
+                .ToListAsync();
+
+            return Ok(equipments);
+        }
+
         [HttpPost]
         public async Task<ActionResult<Equipment>> PostEquipment(Equipment equipment)
         {
