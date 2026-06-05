@@ -42,6 +42,14 @@ const systemService = {
     const response = await api.delete(`/systems/${id}`);
     return response.data;
   },
+  associatePoint: async (systemKey: number, pointKey: number) => {
+    const response = await api.post<SystemPoint>('/systempoints', { systemKey, pointKey });
+    return response.data;
+  },
+  disassociatePoint: async (sysPointKey: number) => {
+    const response = await api.delete(`/systempoints/${sysPointKey}`);
+    return response.data;
+  },
 };
 
 export default systemService;

@@ -80,3 +80,8 @@ export const deletePoint = async (id: number): Promise<any> => {
   const response = await api.delete(`${POINTS_BASE_URL}/${id}`);
   return response.data;
 };
+
+export const getAllPoints = async (): Promise<(Point & { equipment?: Equipment })[]> => {
+  const response = await api.get<(Point & { equipment?: Equipment })[]>(POINTS_BASE_URL);
+  return response.data;
+};
