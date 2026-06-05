@@ -116,6 +116,7 @@ const Systems = () => {
           loading={loading}
           onEdit={handleEditSystem}
           onDelete={handleDeleteSystem}
+          onRefresh={fetchData}
         />
       </div>
 

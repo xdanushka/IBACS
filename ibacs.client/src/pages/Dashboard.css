@@ -113,7 +113,7 @@
   color: #334155 !important;
 }
 
-.location-nav-item.active {
+.location-nav-item.active, .system-nav-item.active {
   background-color: #2563eb !important;
   color: white !important;
   font-weight: 600 !important;

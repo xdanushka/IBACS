@@ -22,6 +22,9 @@ namespace IBACS.Server.Controllers
         {
             return await _context.Systems
                 .Include(s => s.Location)
+                .Include(s => s.SystemPoints)
+                    .ThenInclude(sp => sp.Point)
+                        .ThenInclude(p => p.Equipment)
                 .OrderBy(s => s.Name)
                 .ToListAsync();
         }
@@ -123,6 +126,20 @@ namespace IBACS.Server.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // GET: api/locations/{locationKey}/systems
+        [HttpGet("/api/locations/{locationKey}/systems")]
+        public async Task<ActionResult<IEnumerable<SystemModel>>> GetSystemsByLocation(int locationKey)
+        {
+            return await _context.Systems
+                .Include(s => s.Location)
+                .Include(s => s.SystemPoints)
+                    .ThenInclude(sp => sp.Point)
+                        .ThenInclude(p => p.Equipment)
+                .Where(s => s.LocationKey == locationKey)
+                .OrderBy(s => s.Name)
+                .ToListAsync();
         }
 
         private bool SystemExists(int id)
