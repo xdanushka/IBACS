@@ -3,16 +3,16 @@ import './Dashboard.css';
 import { EquipmentManager } from '../components/EquipmentManager';
 import { LocationTree } from '../components/LocationTree';
 import StructuralDashboard from '../components/StructuralDashboard.tsx';
-import { 
-  Thermometer, 
-  Activity, 
-  Cpu, 
-  ChevronDown, 
-  ChevronRight, 
-  Folder, 
-  Layers, 
-  MapPin, 
-  TrendingUp, 
+import {
+  Thermometer,
+  Activity,
+  Cpu,
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  Layers,
+  MapPin,
+  TrendingUp,
   TrendingDown,
   Wifi,
   Gauge
@@ -37,14 +37,14 @@ const Dashboard: React.FC = () => {
   const [locations, setLocations] = useState<LocationItem[]>([]);
   const [allEquipment, setAllEquipment] = useState<Equipment[]>([]);
   const [allSystems, setAllSystems] = useState<SystemModel[]>([]);
-  
+
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
   const [selectedEquipmentKey, setSelectedEquipmentKey] = useState<number | null>(null);
   const [selectedSystemKey, setSelectedSystemKey] = useState<number | null>(null);
-  
+
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [simulatedValues, setSimulatedValues] = useState<Record<number, SimValue>>({});
-  
+
   const [activeMiddleView, setActiveMiddleView] = useState<'liveData' | 'locationManager' | 'equipmentManager' | 'systemManager'>('liveData');
 
   // Fetch the initial locations, equipment, and systems from database
@@ -144,12 +144,12 @@ const Dashboard: React.FC = () => {
     return allSystems.find(sys => sys.systemKey === selectedSystemKey) || null;
   }, [allSystems, selectedSystemKey]);
 
-interface DashboardPoint {
-  pointKey?: number;
-  equipmentKey?: number;
-  name: string;
-  address?: string | null;
-}
+  interface DashboardPoint {
+    pointKey?: number;
+    equipmentKey?: number;
+    name: string;
+    address?: string | null;
+  }
 
   // Extract points for the active target selection
   const activePoints = useMemo((): DashboardPoint[] => {
@@ -166,14 +166,12 @@ interface DashboardPoint {
   const handleLocationClick = (locationKey: number) => {
     setSelectedLocation(locationKey);
     setActiveMiddleView('liveData');
-    setSelectedEquipmentKey(null);
-    setSelectedSystemKey(null);
-  };
+    setSelectedSystemKey(null); // Reset selected system
 
-  const handleEquipmentClick = (eqKey: number) => {
-    setSelectedEquipmentKey(eqKey);
-    setSelectedSystemKey(null);
-    setActiveMiddleView('liveData');
+    fetch(`/api/locations/${locationKey}/systems`)
+      .then((res) => res.json())
+      .then((data) => setSystems(data))
+      .catch((err) => console.error('Error fetching systems:', err));
   };
 
   const handleSystemClick = (sysKey: number) => {
@@ -278,125 +276,56 @@ interface DashboardPoint {
   return (
     <div className="ibacs-container">
       <div className="ibacs-main-layout">
-        
-        {/* Left Column: Assets & Systems Navigator */}
+
+        {/* Left Column: Subsystem Navigator */}
         <aside className="panel subsystem-navigator">
-          <h3>Asset Navigator</h3>
+          <h3>Subsystem Navigator</h3>
           {selectedLocation === null ? (
-            <p className="placeholder-text">Please select a location in the structural view to display assets.</p>
+            <p className="placeholder-text">Please select a location to view its systems.</p>
+          ) : systems.length > 0 ? (
+            <ul className="nav-list">
+              {systems.map((sys) => (
+                <li
+                  key={sys.systemKey}
+                  className={`system-nav-item ${selectedSystemKey === sys.systemKey ? 'active' : ''}`}
+                  onClick={() => setSelectedSystemKey(sys.systemKey)}
+                >
+                  ⚙️ {sys.name}
+                </li>
+              ))}
+            </ul>
           ) : (
-            <div className="navigator-tree">
-              
-              {/* Grouped Equipment Categories */}
-              {Object.keys(groupedEquipment).map(categoryName => {
-                const equipments = groupedEquipment[categoryName];
-                const isExpanded = expandedGroups[categoryName] !== false; // expanded by default
-                
-                return (
-                  <div key={categoryName} className="tree-group">
-                    <div 
-                      className="tree-group-header"
-                      onClick={() => setExpandedGroups(prev => ({ ...prev, [categoryName]: !isExpanded }))}
-                    >
-                      <span className="tree-chevron">
-                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      </span>
-                      <Folder size={14} className="tree-icon icon-yellow" />
-                      <span className="tree-group-title">{categoryName}</span>
-                      <span className="tree-badge">{equipments.length}</span>
-                    </div>
-
-                    {isExpanded && (
-                      <ul className="tree-leaves">
-                        {equipments.map(eq => (
-                          <li
-                            key={eq.equipmentKey}
-                            className={`tree-leaf ${selectedEquipmentKey === eq.equipmentKey ? 'active' : ''}`}
-                            onClick={() => handleEquipmentClick(eq.equipmentKey!)}
-                          >
-                            <Cpu size={13} className="tree-leaf-icon" />
-                            <span className="tree-leaf-name">{eq.name}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Systems Group */}
-              <div className="tree-group">
-                {(() => {
-                  const isExpanded = expandedGroups['Systems'] !== false; // expanded by default
-                  
-                  return (
-                    <>
-                      <div 
-                        className="tree-group-header"
-                        onClick={() => setExpandedGroups(prev => ({ ...prev, Systems: !isExpanded }))}
-                      >
-                        <span className="tree-chevron">
-                          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                        </span>
-                        <Layers size={14} className="tree-icon icon-blue" />
-                        <span className="tree-group-title">Systems</span>
-                        <span className="tree-badge">{filteredSystems.length}</span>
-                      </div>
-
-                      {isExpanded && (
-                        <ul className="tree-leaves">
-                          {filteredSystems.map(sys => (
-                            <li
-                              key={sys.systemKey}
-                              className={`tree-leaf ${selectedSystemKey === sys.systemKey ? 'active' : ''}`}
-                              onClick={() => handleSystemClick(sys.systemKey!)}
-                            >
-                              <Activity size={13} className="tree-leaf-icon" />
-                              <span className="tree-leaf-name">{sys.name}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              {Object.keys(groupedEquipment).length === 0 && filteredSystems.length === 0 && (
-                <p className="no-data-text">No equipment or systems found for this location.</p>
-              )}
-
-            </div>
+            <p className="error-text">No systems available for this location.</p>
           )}
         </aside>
 
-        {/* Center Canvas Column: Active Telemetry View */}
+        {/*Center Canvas Column: Active RT Page View */}
         <main className="panel rt-page-view">
           <h3>Telemetry & Live Data View</h3>
-          
+
           {activeMiddleView === 'locationManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} className="btn-back">← Back to Live View</button>
-              <div className="manager-fallback-card">
-                <h4>🏢 Location Manager</h4>
-                <p>Location configuration and hierarchical tree forms render here.</p>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
+                <h4 style={{ marginTop: 0 }}>🏢 Location Manager</h4>
+                <p style={{ color: '#64748b', fontSize: '13px' }}>Location configuration and hierarchical tree forms will render here.</p>
               </div>
             </div>
           )}
 
           {activeMiddleView === 'equipmentManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} className="btn-back">← Back to Live View</button>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
               <EquipmentManager />
             </div>
           )}
 
           {activeMiddleView === 'systemManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} className="btn-back">← Back to Live View</button>
-              <div className="manager-fallback-card">
-                <h4>⚙️ System Manager</h4>
-                <p>Automation subsystem loops and logical network tags render here.</p>
+              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
+                <h4 style={{ marginTop: 0 }}>⚙️ System Manager</h4>
+                <p style={{ color: '#64748b', fontSize: '13px' }}>Automation subsystem loops and logical network tags will render here.</p>
               </div>
             </div>
           )}
@@ -405,10 +334,10 @@ interface DashboardPoint {
             <div className="rt-content-box">
               {selectedLocation && selectedLocationData ? (
                 <div>
-                  
+
                   {selectedEquipment ? (
                     <div className="telemetry-section animate-fade-in">
-                      
+
                       {/* Telemetry Header Banner */}
                       <div className="telemetry-banner">
                         <div className="banner-details">
@@ -447,11 +376,11 @@ interface DashboardPoint {
                             const sim = simulatedValues[p.pointKey!];
                             const val = sim ? sim.value : '--';
                             const trend = sim ? sim.trend : 'stable';
-                            
+
                             const isTemp = p.name.toLowerCase().includes('temp') || (p.address || '').toLowerCase().includes('temp');
                             const isHumid = p.name.toLowerCase().includes('humid') || (p.address || '').toLowerCase().includes('humid');
                             const isStatus = p.name.toLowerCase().includes('status') || p.name.toLowerCase().includes('run') || p.name.toLowerCase().includes('state') || p.name.toLowerCase().includes('mode') || p.name.toLowerCase().includes('enable');
-                            
+
                             let valStr = String(val);
                             if (typeof val === 'number') {
                               if (isTemp) valStr += ' °C';
@@ -498,7 +427,7 @@ interface DashboardPoint {
                     </div>
                   ) : selectedSystem ? (
                     <div className="telemetry-section animate-fade-in">
-                      
+
                       {/* Telemetry Header Banner */}
                       <div className="telemetry-banner banner-system">
                         <div className="banner-details">
@@ -537,11 +466,11 @@ interface DashboardPoint {
                             const sim = simulatedValues[p.pointKey!];
                             const val = sim ? sim.value : '--';
                             const trend = sim ? sim.trend : 'stable';
-                            
+
                             const isTemp = p.name.toLowerCase().includes('temp') || (p.address || '').toLowerCase().includes('temp');
                             const isHumid = p.name.toLowerCase().includes('humid') || (p.address || '').toLowerCase().includes('humid');
                             const isStatus = p.name.toLowerCase().includes('status') || p.name.toLowerCase().includes('run') || p.name.toLowerCase().includes('state') || p.name.toLowerCase().includes('mode') || p.name.toLowerCase().includes('enable');
-                            
+
                             let valStr = String(val);
                             if (typeof val === 'number') {
                               if (isTemp) valStr += ' °C';
@@ -618,11 +547,11 @@ interface DashboardPoint {
         {/* Right Column: Location Hierarchical Navigation Tree */}
         <aside className="panel location-navigator">
           <h3>Structural Tree</h3>
-          <StructuralDashboard 
-            key={JSON.stringify(locations)}
-            items={locations}
-            selectedId={selectedLocation}
-            onSelect={handleLocationClick}
+          <StructuralDashboard
+            key={JSON.stringify(locations)} // Forces layout refresh smoothly inside browser whenever server inventory resets
+            items={locations} // Injects live dynamic array list straight down into tree branch configurations
+            selectedId={selectedLocation} // Highlights currently active golden state matching parameter
+            onSelect={handleLocationClick} // Triggers live sub-system rendering seamlessly upon column select clicks
           />
         </aside>
 

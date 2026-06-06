@@ -10,23 +10,20 @@ interface TreeNode {
 }
 
 interface StructuralDashboardProps {
-  items: any[]; // Changed to any[] to safely intercept dynamic string/numeric types from parent props
+  items: any[]; 
   selectedId?: number | null;
-  onSelect?: (id: number) => void;
+  onSelect?: (id: number) => void; 
 }
 
-// 🔄 Highly robust helper function to safely map parent-child nodes regardless of string/number type mismatches
 const buildDynamicTree = (flatList: any[]): TreeNode[] => {
   if (!Array.isArray(flatList) || flatList.length === 0) return [];
 
   const nodeMap = new Map<number, TreeNode>();
   const roots: TreeNode[] = [];
 
-  // Step 1: Normalize properties and register every item into the map cache using numeric keys
   flatList.forEach(item => {
     if (!item) return;
     
-    // Fallback extraction support for various database casing schemas
     const rawKey = item.locationKey ?? item.location_key ?? item.LocationKey;
     const rawName = item.locationName ?? item.location_name ?? item.LocationName ?? 'Unknown';
     const rawParentKey = item.parentLocationKey ?? item.parent_location_key ?? item.ParentLocationKey ?? null;
@@ -34,7 +31,6 @@ const buildDynamicTree = (flatList: any[]): TreeNode[] => {
     if (rawKey !== undefined && rawKey !== null) {
       const numericKey = Number(rawKey);
       
-      // Handle option value conversion failures safely
       if (!isNaN(numericKey)) {
         nodeMap.set(numericKey, {
           locationKey: numericKey,
@@ -47,7 +43,6 @@ const buildDynamicTree = (flatList: any[]): TreeNode[] => {
     }
   });
 
-  // Step 2: Dynamically link child nodes onto parent structural reference parameters
   nodeMap.forEach(node => {
     const parent = node.parentLocationKey;
     if (parent === null || parent === undefined || !nodeMap.has(Number(parent)) || Number(parent) === node.locationKey) {
@@ -72,16 +67,17 @@ interface RenderBranchProps {
   onSelect?: (id: number) => void;
   expandedNodes: { [key: number]: boolean };
   onToggleExpand: (id: number) => void;
+  onSelectLocation?: (id: number) => void; 
 }
 
-// 📦 Recursive component to dynamically map UI rendering branches based on nested data layouts
 const RenderBranch: React.FC<RenderBranchProps> = ({
   nodes,
   level,
   selectedId,
   onSelect,
   expandedNodes,
-  onToggleExpand
+  onToggleExpand,
+  onSelectLocation 
 }) => {
   const getStylesByLevel = (currentLevel: number, isSelected: boolean) => {
     const isRoot = currentLevel === 0;
@@ -161,6 +157,11 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
               onClick={() => {
                 if (onSelect) onSelect(node.locationKey);
                 if (hasChildren) onToggleExpand(node.locationKey);
+                
+                // ⚡ Click කරපු Location Key එක මෙතනින් උඩට යවනවා
+                if (onSelectLocation) {
+                  onSelectLocation(node.locationKey);
+                }
               }}
             >
               {level === 0 ? (
@@ -188,6 +189,7 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
                 onSelect={onSelect}
                 expandedNodes={expandedNodes}
                 onToggleExpand={onToggleExpand}
+                onSelectLocation={onSelectLocation} 
               />
             )}
           </div>
@@ -197,8 +199,12 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
   );
 };
 
+<<<<<<< HEAD
 const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, selectedId, onSelect }) => {
   // Recalculate component tree parameters safely upon any raw element dependency changes
+=======
+const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, onSelect }) => {
+>>>>>>> db1b63aa1534242097fd337214f0adc66d40ab64
   const treeData = useMemo(() => buildDynamicTree(items), [items]);
   
   const [expandedNodes, setExpandedNodes] = useState<{ [key: number]: boolean }>({
@@ -210,7 +216,6 @@ const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, select
     setExpandedNodes(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Safe validation step to check if parsed hierarchy roots actually populated
   if (!treeData || treeData.length === 0) {
     return (
       <div style={{ padding: '20px', background: '#1e293b', color: '#94a3b8', borderRadius: '12px', fontSize: '13px', textAlign: 'center' }}>
@@ -229,6 +234,7 @@ const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, select
           onSelect={onSelect}
           expandedNodes={expandedNodes}
           onToggleExpand={handleToggleExpand}
+          onSelectLocation={onSelect} 
         />
       </div>
     </div>
