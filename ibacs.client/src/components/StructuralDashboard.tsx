@@ -68,8 +68,8 @@ const buildDynamicTree = (flatList: any[]): TreeNode[] => {
 interface RenderBranchProps {
   nodes: TreeNode[];
   level: number;
-  activeItem: string;
-  setActiveItem: (name: string) => void;
+  selectedId?: number | null;
+  onSelect?: (id: number) => void;
   expandedNodes: { [key: number]: boolean };
   onToggleExpand: (id: number) => void;
 }
@@ -78,8 +78,8 @@ interface RenderBranchProps {
 const RenderBranch: React.FC<RenderBranchProps> = ({
   nodes,
   level,
-  activeItem,
-  setActiveItem,
+  selectedId,
+  onSelect,
   expandedNodes,
   onToggleExpand
 }) => {
@@ -152,14 +152,14 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
       {nodes.map(node => {
         const hasChildren = node.children.length > 0;
         const isExpanded = !!expandedNodes[node.locationKey];
-        const isSelected = activeItem?.toLowerCase() === node.locationName?.toLowerCase();
+        const isSelected = selectedId === node.locationKey;
 
         return (
           <div key={node.locationKey} style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
             <div
               style={getStylesByLevel(level, isSelected)}
               onClick={() => {
-                setActiveItem(node.locationName);
+                if (onSelect) onSelect(node.locationKey);
                 if (hasChildren) onToggleExpand(node.locationKey);
               }}
             >
@@ -184,8 +184,8 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
               <RenderBranch
                 nodes={node.children}
                 level={level + 1}
-                activeItem={activeItem}
-                setActiveItem={setActiveItem}
+                selectedId={selectedId}
+                onSelect={onSelect}
                 expandedNodes={expandedNodes}
                 onToggleExpand={onToggleExpand}
               />
@@ -197,11 +197,10 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
   );
 };
 
-const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items }) => {
+const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, selectedId, onSelect }) => {
   // Recalculate component tree parameters safely upon any raw element dependency changes
   const treeData = useMemo(() => buildDynamicTree(items), [items]);
   
-  const [activeItem, setActiveItem] = useState<string>('2nd floor');
   const [expandedNodes, setExpandedNodes] = useState<{ [key: number]: boolean }>({
     1: true, 
     3: true  
@@ -226,8 +225,8 @@ const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items }) => {
         <RenderBranch
           nodes={treeData}
           level={0}
-          activeItem={activeItem}
-          setActiveItem={setActiveItem}
+          selectedId={selectedId}
+          onSelect={onSelect}
           expandedNodes={expandedNodes}
           onToggleExpand={handleToggleExpand}
         />
