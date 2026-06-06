@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 
-interface LocationItem {
+export interface LocationItem {
   locationKey?: number;
   location_key?: number;
   LocationKey?: number;

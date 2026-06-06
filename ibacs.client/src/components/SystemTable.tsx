@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cpu, MapPin, Info, Trash2, Edit3, MoreVertical, ChevronDown, ChevronRight, Plus, X, Check, Activity } from 'lucide-react';
+import { Cpu, MapPin, Info, Trash2, Edit3, MoreVertical, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { type SystemModel } from '../api/systemService';
 import systemService from '../api/systemService';
 import { getAllPoints, type Point, type Equipment } from '../api/equipmentApi';

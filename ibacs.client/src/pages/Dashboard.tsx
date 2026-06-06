@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './Dashboard.css';
 import { EquipmentManager } from '../components/EquipmentManager';
-import { LocationTree } from '../components/LocationTree';
+
 import StructuralDashboard from '../components/StructuralDashboard.tsx';
 import {
-  Thermometer,
   Activity,
   Cpu,
   ChevronDown,
@@ -13,11 +12,9 @@ import {
   Layers,
   MapPin,
   TrendingUp,
-  TrendingDown,
-  Wifi,
-  Gauge
+  TrendingDown
 } from 'lucide-react';
-import { getAllEquipment, type Equipment, type Point } from '../api/equipmentApi';
+import { getAllEquipment, type Equipment } from '../api/equipmentApi';
 import systemService, { type SystemModel } from '../api/systemService';
 
 interface LocationItem {
@@ -54,8 +51,12 @@ const Dashboard: React.FC = () => {
         if (!res.ok) throw new Error('Failed to fetch location structural map.');
         return res.json();
       })
-      .then((data) => {
+      .then((data: LocationItem[]) => {
         setLocations(data);
+        if (data && data.length > 0) {
+          const topLoc = data.find(loc => loc.parentLocationKey === null) || data[0];
+          setSelectedLocation(topLoc.locationKey);
+        }
       })
       .catch((err) => {
         console.error("Database connection error:", err);
@@ -114,12 +115,6 @@ const Dashboard: React.FC = () => {
     return allEquipment.filter(eq => eq.locationKey !== undefined && descendantLocationKeys.includes(eq.locationKey));
   }, [allEquipment, descendantLocationKeys, selectedLocation]);
 
-  // Filter systems belonging to the selected location and its child locations
-  const filteredSystems = useMemo(() => {
-    if (selectedLocation === null) return [];
-    return allSystems.filter(sys => sys.locationKey !== undefined && descendantLocationKeys.includes(sys.locationKey));
-  }, [allSystems, descendantLocationKeys, selectedLocation]);
-
   // Group filtered equipment by equipment category type
   const groupedEquipment = useMemo(() => {
     const groups: Record<string, Equipment[]> = {};
@@ -132,6 +127,14 @@ const Dashboard: React.FC = () => {
     });
     return groups;
   }, [filteredEquipment]);
+
+  // Filter systems belonging to the selected location and its child locations
+  const filteredSystems = useMemo(() => {
+    if (selectedLocation === null) return [];
+    return allSystems.filter(sys => sys.locationKey !== undefined && descendantLocationKeys.includes(sys.locationKey));
+  }, [allSystems, descendantLocationKeys, selectedLocation]);
+
+
 
   // Selected details
   const selectedEquipment = useMemo(() => {
@@ -167,11 +170,16 @@ const Dashboard: React.FC = () => {
     setSelectedLocation(locationKey);
     setActiveMiddleView('liveData');
     setSelectedSystemKey(null); // Reset selected system
+  };
 
-    fetch(`/api/locations/${locationKey}/systems`)
-      .then((res) => res.json())
-      .then((data) => setSystems(data))
-      .catch((err) => console.error('Error fetching systems:', err));
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
+  };
+
+  const handleEquipmentClick = (eqKey: number) => {
+    setSelectedEquipmentKey(eqKey);
+    setSelectedSystemKey(null);
+    setActiveMiddleView('liveData');
   };
 
   const handleSystemClick = (sysKey: number) => {
@@ -208,6 +216,7 @@ const Dashboard: React.FC = () => {
     };
 
     // Initialize point values if they don't exist yet
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSimulatedValues(prev => {
       const next = { ...prev };
       let updated = false;
@@ -279,23 +288,70 @@ const Dashboard: React.FC = () => {
 
         {/* Left Column: Subsystem Navigator */}
         <aside className="panel subsystem-navigator">
-          <h3>Subsystem Navigator</h3>
+          <h3>Assets & Systems</h3>
           {selectedLocation === null ? (
-            <p className="placeholder-text">Please select a location to view its systems.</p>
-          ) : systems.length > 0 ? (
-            <ul className="nav-list">
-              {systems.map((sys) => (
-                <li
-                  key={sys.systemKey}
-                  className={`system-nav-item ${selectedSystemKey === sys.systemKey ? 'active' : ''}`}
-                  onClick={() => setSelectedSystemKey(sys.systemKey)}
-                >
-                  ⚙️ {sys.name}
-                </li>
-              ))}
-            </ul>
+            <p className="placeholder-text">Please select a location to view its assets.</p>
           ) : (
-            <p className="error-text">No systems available for this location.</p>
+            <div className="navigator-tree">
+              {/* Equipment Groups */}
+              {Object.entries(groupedEquipment).map(([category, eqList]) => (
+                <div key={category} className="tree-group">
+                  <div className="tree-group-header" onClick={() => toggleGroup(category)}>
+                    <div className="tree-chevron">
+                      {expandedGroups[category] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    </div>
+                    <Folder size={14} className="tree-icon icon-yellow" />
+                    <span className="tree-group-title">{category}</span>
+                    <span className="tree-badge">{eqList.length}</span>
+                  </div>
+                  {expandedGroups[category] && (
+                    <ul className="tree-leaves">
+                      {eqList.map((eq) => (
+                        <li
+                          key={eq.equipmentKey}
+                          className={`tree-leaf ${selectedEquipmentKey === eq.equipmentKey ? 'active' : ''}`}
+                          onClick={() => eq.equipmentKey !== undefined && handleEquipmentClick(eq.equipmentKey)}
+                        >
+                          <Cpu size={12} className="tree-leaf-icon" />
+                          <span className="tree-leaf-name">{eq.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+
+              {/* Systems Group */}
+              {filteredSystems.length > 0 && (
+                <div key="systems-group" className="tree-group">
+                  <div className="tree-group-header" onClick={() => toggleGroup('Systems')}>
+                    <div className="tree-chevron">
+                      {expandedGroups['Systems'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    </div>
+                    <Layers size={14} className="tree-icon icon-blue" />
+                    <span className="tree-group-title">Systems</span>
+                    <span className="tree-badge">{filteredSystems.length}</span>
+                  </div>
+                  {expandedGroups['Systems'] && (
+                    <ul className="tree-leaves">
+                      {filteredSystems.map((sys) => (
+                        <li
+                          key={sys.systemKey}
+                          className={`tree-leaf ${selectedSystemKey === sys.systemKey ? 'active' : ''}`}
+                          onClick={() => sys.systemKey !== undefined && handleSystemClick(sys.systemKey)}
+                        >
+                          <Activity size={12} className="tree-leaf-icon" />
+                          <span className="tree-leaf-name">{sys.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+              {Object.keys(groupedEquipment).length === 0 && filteredSystems.length === 0 && (
+                <p className="no-data-text">No assets or systems available for this location.</p>
+              )}
+            </div>
           )}
         </aside>
 
@@ -546,7 +602,7 @@ const Dashboard: React.FC = () => {
 
         {/* Right Column: Location Hierarchical Navigation Tree */}
         <aside className="panel location-navigator">
-          <h3>Structural Tree</h3>
+          <h3>Location Hierarchy</h3>
           <StructuralDashboard
             key={JSON.stringify(locations)} // Forces layout refresh smoothly inside browser whenever server inventory resets
             items={locations} // Injects live dynamic array list straight down into tree branch configurations

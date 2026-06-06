@@ -79,70 +79,6 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
   onToggleExpand,
   onSelectLocation 
 }) => {
-  const getStylesByLevel = (currentLevel: number, isSelected: boolean) => {
-    const isRoot = currentLevel === 0;
-    const isSubTier = currentLevel === 1;
-
-    let background = 'rgba(16, 185, 129, 0.1)'; 
-    let color = '#34d399';
-    let border = '1px solid rgba(16, 185, 129, 0.2)';
-    let marginLeft = '32px';
-    let fontSize = '12px';
-
-    if (isRoot) {
-      background = '#2563eb'; 
-      color = '#ffffff';
-      border = '1px solid transparent';
-      marginLeft = '0px';
-      fontSize = '14px';
-    } else if (isSubTier) {
-      background = 'rgba(59, 130, 246, 0.2)'; 
-      color = '#93c5fd';
-      border = '1px solid rgba(59, 130, 246, 0.3)';
-      marginLeft = '16px';
-      fontSize = '14px';
-    }
-
-    if (isSelected) {
-      return {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: isRoot ? '10px' : '8px',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        boxSizing: 'border-box' as const,
-        fontWeight: '600',
-        background: '#f59e0b',
-        color: '#0f172a',
-        border: '1px solid transparent',
-        boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)',
-        marginLeft,
-        fontSize,
-        width: isRoot ? '100%' : `calc(100% - ${marginLeft})`
-      };
-    }
-
-    return {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      padding: isRoot ? '10px' : '8px',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      transition: 'all 0.2s',
-      boxSizing: 'border-box' as const,
-      fontWeight: '500',
-      background,
-      color,
-      border,
-      marginLeft,
-      fontSize,
-      width: isRoot ? '100%' : `calc(100% - ${marginLeft})`
-    };
-  };
-
   return (
     <>
       {nodes.map(node => {
@@ -150,61 +86,63 @@ const RenderBranch: React.FC<RenderBranchProps> = ({
         const isExpanded = !!expandedNodes[node.locationKey];
         const isSelected = selectedId === node.locationKey;
 
-        return (
-          <div key={node.locationKey} style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
-            <div
-              style={getStylesByLevel(level, isSelected)}
-              onClick={() => {
-                if (onSelect) onSelect(node.locationKey);
-                if (hasChildren) onToggleExpand(node.locationKey);
-                
-                // ⚡ Click කරපු Location Key එක මෙතනින් උඩට යවනවා
-                if (onSelectLocation) {
-                  onSelectLocation(node.locationKey);
-                }
-              }}
-            >
-              {level === 0 ? (
-                <Building2 size={18} style={{ flexShrink: 0 }} />
-              ) : hasChildren ? (
-                <Layers size={16} style={{ flexShrink: 0, color: isSelected ? 'inherit' : '#60a5fa' }} />
-              ) : (
-                <LayoutGrid size={14} style={{ flexShrink: 0 }} />
-              )}
-
-              <span>{node.locationName}</span>
-
-              {hasChildren && (
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-                  {isExpanded ? <ChevronDown size={level === 0 ? 16 : 14} /> : <ChevronRight size={level === 0 ? 16 : 14} />}
+        if (hasChildren) {
+          return (
+            <div key={node.locationKey} className="tree-group">
+              <div 
+                className="tree-group-header"
+                style={isSelected ? { backgroundColor: '#eff6ff' } : {}}
+                onClick={() => {
+                  if (onSelect) onSelect(node.locationKey);
+                  onToggleExpand(node.locationKey);
+                  if (onSelectLocation) onSelectLocation(node.locationKey);
+                }}
+              >
+                <div className="tree-chevron">
+                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </div>
+                {level === 0 ? <Building2 size={14} className="tree-icon icon-blue" /> : <Layers size={14} className="tree-icon icon-yellow" />}
+                <span className="tree-group-title" style={{ color: isSelected ? '#1d4ed8' : '#334155', fontWeight: isSelected ? 800 : 700 }}>
+                  {node.locationName}
+                </span>
+              </div>
+              {isExpanded && (
+                <div className="tree-leaves">
+                  <RenderBranch
+                    nodes={node.children}
+                    level={level + 1}
+                    selectedId={selectedId}
+                    onSelect={onSelect}
+                    expandedNodes={expandedNodes}
+                    onToggleExpand={onToggleExpand}
+                    onSelectLocation={onSelectLocation} 
+                  />
                 </div>
               )}
             </div>
-
-            {hasChildren && isExpanded && (
-              <RenderBranch
-                nodes={node.children}
-                level={level + 1}
-                selectedId={selectedId}
-                onSelect={onSelect}
-                expandedNodes={expandedNodes}
-                onToggleExpand={onToggleExpand}
-                onSelectLocation={onSelectLocation} 
-              />
-            )}
-          </div>
-        );
+          );
+        } else {
+          return (
+            <div 
+              key={node.locationKey} 
+              className={`tree-leaf ${isSelected ? 'active' : ''}`}
+              onClick={() => {
+                if (onSelect) onSelect(node.locationKey);
+                if (onSelectLocation) onSelectLocation(node.locationKey);
+              }}
+            >
+              <LayoutGrid size={12} className="tree-leaf-icon" />
+              <span className="tree-leaf-name">{node.locationName}</span>
+            </div>
+          );
+        }
       })}
     </>
   );
 };
 
-<<<<<<< HEAD
 const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, selectedId, onSelect }) => {
   // Recalculate component tree parameters safely upon any raw element dependency changes
-=======
-const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, onSelect }) => {
->>>>>>> db1b63aa1534242097fd337214f0adc66d40ab64
   const treeData = useMemo(() => buildDynamicTree(items), [items]);
   
   const [expandedNodes, setExpandedNodes] = useState<{ [key: number]: boolean }>({
@@ -218,25 +156,23 @@ const StructuralDashboard: React.FC<StructuralDashboardProps> = ({ items, onSele
 
   if (!treeData || treeData.length === 0) {
     return (
-      <div style={{ padding: '20px', background: '#1e293b', color: '#94a3b8', borderRadius: '12px', fontSize: '13px', textAlign: 'center' }}>
+      <p className="no-data-text">
         No locations configured in your database infrastructure setup yet.
-      </div>
+      </p>
     );
   }
 
   return (
-    <div style={{ padding: '12px', background: '#1e293b', color: '#f8fafc', borderRadius: '12px', fontFamily: 'sans-serif', border: '1px solid #334155', width: '100%', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-        <RenderBranch
-          nodes={treeData}
-          level={0}
-          selectedId={selectedId}
-          onSelect={onSelect}
-          expandedNodes={expandedNodes}
-          onToggleExpand={handleToggleExpand}
-          onSelectLocation={onSelect} 
-        />
-      </div>
+    <div className="navigator-tree">
+      <RenderBranch
+        nodes={treeData}
+        level={0}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        expandedNodes={expandedNodes}
+        onToggleExpand={handleToggleExpand}
+        onSelectLocation={onSelect} 
+      />
     </div>
   );
 };
