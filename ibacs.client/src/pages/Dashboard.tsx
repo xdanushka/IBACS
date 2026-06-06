@@ -3,7 +3,22 @@ import './Dashboard.css';
 import { EquipmentManager } from '../components/EquipmentManager';
 import { LocationTree } from '../components/LocationTree';
 import StructuralDashboard from '../components/StructuralDashboard.tsx';
-import { Thermometer, Activity, Cpu } from 'lucide-react';
+import { 
+  Thermometer, 
+  Activity, 
+  Cpu, 
+  ChevronDown, 
+  ChevronRight, 
+  Folder, 
+  Layers, 
+  MapPin, 
+  TrendingUp, 
+  TrendingDown,
+  Wifi,
+  Gauge
+} from 'lucide-react';
+import { getAllEquipment, type Equipment, type Point } from '../api/equipmentApi';
+import systemService, { type SystemModel } from '../api/systemService';
 
 interface LocationItem {
   locationKey: number;
@@ -12,38 +27,27 @@ interface LocationItem {
   parentLocationKey: number | null;
 }
 
-interface SystemPointItem {
-  sysPointKey?: number;
-  pointKey: number;
-  point?: {
-    pointKey: number;
-    name: string;
-    address?: string;
-  };
-  systemKey?: number;
-}
-
-interface SystemItem {
-  systemKey: number;
-  name: string;
-  locationKey: number;
-  description?: string;
-  location?: LocationItem;
-  systemPoints?: SystemPointItem[];
+interface SimValue {
+  value: number | string;
+  trend: 'up' | 'down' | 'stable';
+  lastUpdated: number;
 }
 
 const Dashboard: React.FC = () => {
   const [locations, setLocations] = useState<LocationItem[]>([]);
-  const [systems, setSystems] = useState<SystemItem[]>([]);
-  const [allPoints, setAllPoints] = useState<any[]>([]);
+  const [allEquipment, setAllEquipment] = useState<Equipment[]>([]);
+  const [allSystems, setAllSystems] = useState<SystemModel[]>([]);
+  
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+  const [selectedEquipmentKey, setSelectedEquipmentKey] = useState<number | null>(null);
   const [selectedSystemKey, setSelectedSystemKey] = useState<number | null>(null);
-  const [showSettingsMenu, setShowSettingsMenu] = useState<boolean>(false);
-  const [simulatedValues, setSimulatedValues] = useState<Record<number, number | string>>({});
+  
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [simulatedValues, setSimulatedValues] = useState<Record<number, SimValue>>({});
   
   const [activeMiddleView, setActiveMiddleView] = useState<'liveData' | 'locationManager' | 'equipmentManager' | 'systemManager'>('liveData');
 
-  // Fetch the full dynamic layout array schema from database repository API
+  // Fetch the initial locations, equipment, and systems from database
   useEffect(() => {
     fetch('/api/Locations')
       .then((res) => {
@@ -57,10 +61,21 @@ const Dashboard: React.FC = () => {
         console.error("Database connection error:", err);
       });
 
-    fetch('/api/Points')
-      .then((res) => res.json())
-      .then((data) => setAllPoints(data))
-      .catch((err) => console.error("Error fetching points:", err));
+    getAllEquipment()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAllEquipment(data);
+        }
+      })
+      .catch((err) => console.error("Error fetching equipment:", err));
+
+    systemService.getSystems()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAllSystems(data);
+        }
+      })
+      .catch((err) => console.error("Error fetching systems:", err));
   }, []);
 
   const locationMap = useMemo(() => {
@@ -69,142 +84,319 @@ const Dashboard: React.FC = () => {
 
   const selectedLocationData = selectedLocation !== null ? locationMap.get(selectedLocation) : null;
 
+  // Helper to find child location keys recursively
+  const getDescendantLocationKeys = (locationKey: number, locList: LocationItem[]): number[] => {
+    const keys = [locationKey];
+    const findChildren = (parentKey: number) => {
+      locList.forEach(loc => {
+        if (loc.parentLocationKey !== null && Number(loc.parentLocationKey) === parentKey) {
+          const childKey = Number(loc.locationKey);
+          if (!keys.includes(childKey)) {
+            keys.push(childKey);
+            findChildren(childKey);
+          }
+        }
+      });
+    };
+    findChildren(locationKey);
+    return keys;
+  };
+
+  // Memoized descendant location keys for the selected location
+  const descendantLocationKeys = useMemo(() => {
+    if (selectedLocation === null) return [];
+    return getDescendantLocationKeys(selectedLocation, locations);
+  }, [selectedLocation, locations]);
+
+  // Filter equipment belonging to the selected location and its child locations
+  const filteredEquipment = useMemo(() => {
+    if (selectedLocation === null) return [];
+    return allEquipment.filter(eq => eq.locationKey !== undefined && descendantLocationKeys.includes(eq.locationKey));
+  }, [allEquipment, descendantLocationKeys, selectedLocation]);
+
+  // Filter systems belonging to the selected location and its child locations
+  const filteredSystems = useMemo(() => {
+    if (selectedLocation === null) return [];
+    return allSystems.filter(sys => sys.locationKey !== undefined && descendantLocationKeys.includes(sys.locationKey));
+  }, [allSystems, descendantLocationKeys, selectedLocation]);
+
+  // Group filtered equipment by equipment category type
+  const groupedEquipment = useMemo(() => {
+    const groups: Record<string, Equipment[]> = {};
+    filteredEquipment.forEach(eq => {
+      const typeName = eq.equipmentCategory?.category || 'General Equipment';
+      if (!groups[typeName]) {
+        groups[typeName] = [];
+      }
+      groups[typeName].push(eq);
+    });
+    return groups;
+  }, [filteredEquipment]);
+
+  // Selected details
+  const selectedEquipment = useMemo(() => {
+    if (selectedEquipmentKey === null) return null;
+    return allEquipment.find(eq => eq.equipmentKey === selectedEquipmentKey) || null;
+  }, [allEquipment, selectedEquipmentKey]);
+
+  const selectedSystem = useMemo(() => {
+    if (selectedSystemKey === null) return null;
+    return allSystems.find(sys => sys.systemKey === selectedSystemKey) || null;
+  }, [allSystems, selectedSystemKey]);
+
+interface DashboardPoint {
+  pointKey?: number;
+  equipmentKey?: number;
+  name: string;
+  address?: string | null;
+}
+
+  // Extract points for the active target selection
+  const activePoints = useMemo((): DashboardPoint[] => {
+    if (selectedEquipment) {
+      return selectedEquipment.points || [];
+    }
+    if (selectedSystem) {
+      return (selectedSystem.systemPoints || []).map(sp => sp.point).filter(Boolean) as DashboardPoint[];
+    }
+    return [];
+  }, [selectedEquipment, selectedSystem]);
+
+  // Handle location change clicks from structural dashboard
   const handleLocationClick = (locationKey: number) => {
     setSelectedLocation(locationKey);
     setActiveMiddleView('liveData');
-    setSelectedSystemKey(null); // Reset selected system
-    
-    fetch(`/api/locations/${locationKey}/systems`)
-      .then((res) => res.json())
-      .then((data) => setSystems(data))
-      .catch((err) => console.error('Error fetching systems:', err));
+    setSelectedEquipmentKey(null);
+    setSelectedSystemKey(null);
   };
 
-  // Find the selected system details
-  const selectedSystem = useMemo(() => {
-    return systems.find(sys => sys.systemKey === selectedSystemKey) || null;
-  }, [systems, selectedSystemKey]);
+  const handleEquipmentClick = (eqKey: number) => {
+    setSelectedEquipmentKey(eqKey);
+    setSelectedSystemKey(null);
+    setActiveMiddleView('liveData');
+  };
 
-  // Effect to handle simulated live updates
+  const handleSystemClick = (sysKey: number) => {
+    setSelectedSystemKey(sysKey);
+    setSelectedEquipmentKey(null);
+    setActiveMiddleView('liveData');
+  };
+
+  // Effect to simulate random telemetry point values
   useEffect(() => {
-    if (!selectedSystem || !selectedSystem.systemPoints || selectedSystem.systemPoints.length === 0) {
-      setSimulatedValues({});
+    if (activePoints.length === 0) {
       return;
     }
 
-    // Initialize base values
-    const initialValues: Record<number, number | string> = {};
-    selectedSystem.systemPoints.forEach(sp => {
-      const name = sp.point?.name?.toLowerCase() || '';
-      const address = sp.point?.address?.toLowerCase() || '';
-      
-      if (name.includes('temp') || address.includes('temp')) {
-        // Temperature: base 22.0
-        initialValues[sp.pointKey] = 22.0 + Math.random() * 2;
-      } else if (name.includes('humid') || address.includes('humid')) {
-        // Humidity: base 50%
-        initialValues[sp.pointKey] = Math.round(48 + Math.random() * 6);
-      } else if (name.includes('status') || name.includes('run') || name.includes('state')) {
-        // Status: RUNNING or STOPPED
-        initialValues[sp.pointKey] = Math.random() > 0.15 ? 'RUNNING' : 'STOPPED';
-      } else {
-        // General metrics
-        initialValues[sp.pointKey] = Math.round(30 + Math.random() * 40);
+    const initPointValue = (name: string, address: string) => {
+      const n = name.toLowerCase();
+      const a = (address || '').toLowerCase();
+      if (n.includes('temp') || a.includes('temp')) {
+        return parseFloat((19.0 + Math.random() * 6).toFixed(1)); // 19°C - 25°C
       }
-    });
-    setSimulatedValues(initialValues);
+      if (n.includes('humid') || a.includes('humid')) {
+        return Math.round(40 + Math.random() * 25); // 40% - 65%
+      }
+      if (n.includes('press') || a.includes('press')) {
+        return Math.round(20 + Math.random() * 30); // 20 - 50 Pa
+      }
+      if (n.includes('flow') || a.includes('flow')) {
+        return parseFloat((2.0 + Math.random() * 10).toFixed(1)); // 2.0 - 12.0 L/s
+      }
+      if (n.includes('status') || n.includes('run') || n.includes('state') || n.includes('mode') || n.includes('enable')) {
+        return Math.random() > 0.25 ? 'RUNNING' : 'STOPPED';
+      }
+      return Math.round(15 + Math.random() * 70); // Generic fallback range
+    };
 
-    // Update values periodically
+    // Initialize point values if they don't exist yet
+    setSimulatedValues(prev => {
+      const next = { ...prev };
+      let updated = false;
+      activePoints.forEach(p => {
+        if (p.pointKey !== undefined && !next[p.pointKey]) {
+          next[p.pointKey] = {
+            value: initPointValue(p.name, p.address || ''),
+            trend: 'stable',
+            lastUpdated: Date.now()
+          };
+          updated = true;
+        }
+      });
+      return updated ? next : prev;
+    });
+
     const interval = setInterval(() => {
       setSimulatedValues(prev => {
         const next = { ...prev };
-        selectedSystem.systemPoints?.forEach(sp => {
-          const name = sp.point?.name?.toLowerCase() || '';
-          const address = sp.point?.address?.toLowerCase() || '';
-          const current = prev[sp.pointKey];
+        activePoints.forEach(p => {
+          if (p.pointKey === undefined) return;
+          const currentData = prev[p.pointKey];
+          if (!currentData) return;
 
-          if (typeof current === 'number') {
-            if (name.includes('temp') || address.includes('temp')) {
-              // Drift temperature slightly (+/- 0.1)
-              const delta = (Math.random() - 0.5) * 0.2;
-              next[sp.pointKey] = parseFloat((current + delta).toFixed(1));
-            } else if (name.includes('humid') || address.includes('humid')) {
-              // Drift humidity (+/- 1)
-              const delta = Math.random() > 0.5 ? 1 : -1;
-              const nextVal = current + delta;
-              next[sp.pointKey] = Math.max(30, Math.min(90, nextVal));
+          const n = p.name.toLowerCase();
+          const a = (p.address || '').toLowerCase();
+          const currVal = currentData.value;
+          let newVal: number | string = currVal;
+          let trend: 'up' | 'down' | 'stable' = 'stable';
+
+          if (typeof currVal === 'number') {
+            let drift = 0;
+            if (n.includes('temp') || a.includes('temp')) {
+              drift = (Math.random() - 0.5) * 0.3;
+              newVal = parseFloat(Math.max(15, Math.min(32, currVal + drift)).toFixed(1));
+            } else if (n.includes('humid') || a.includes('humid')) {
+              drift = Math.random() > 0.5 ? 1 : -1;
+              newVal = Math.max(10, Math.min(98, currVal + drift));
             } else {
-              // General metric drift
-              const delta = Math.round((Math.random() - 0.5) * 4);
-              next[sp.pointKey] = Math.max(0, current + delta);
+              drift = Math.round((Math.random() - 0.5) * 6);
+              newVal = Math.max(0, currVal + drift);
             }
-          } else if (typeof current === 'string') {
-            // Status: occasionally toggle
-            if (Math.random() > 0.95) {
-              next[sp.pointKey] = current === 'RUNNING' ? 'STOPPED' : 'RUNNING';
+
+            if (newVal > currVal) trend = 'up';
+            else if (newVal < currVal) trend = 'down';
+          } else if (typeof currVal === 'string') {
+            // Randomly toggle state values
+            if (Math.random() > 0.9) {
+              newVal = currVal === 'RUNNING' ? 'STOPPED' : 'RUNNING';
             }
           }
+
+          next[p.pointKey] = {
+            value: newVal,
+            trend: trend,
+            lastUpdated: Date.now()
+          };
         });
         return next;
       });
-    }, 3000);
+    }, 2500);
 
     return () => clearInterval(interval);
-  }, [selectedSystem]);
+  }, [activePoints]);
 
   return (
     <div className="ibacs-container">
       <div className="ibacs-main-layout">
         
-        {/* Left Column: Subsystem Navigator */}
+        {/* Left Column: Assets & Systems Navigator */}
         <aside className="panel subsystem-navigator">
-          <h3>Subsystem Navigator</h3>
+          <h3>Asset Navigator</h3>
           {selectedLocation === null ? (
-            <p className="placeholder-text">Please select a location to view its systems.</p>
-          ) : systems.length > 0 ? (
-            <ul className="nav-list">
-              {systems.map((sys) => (
-                <li
-                  key={sys.systemKey}
-                  className={`system-nav-item ${selectedSystemKey === sys.systemKey ? 'active' : ''}`}
-                  onClick={() => setSelectedSystemKey(sys.systemKey)}
-                >
-                  ⚙️ {sys.name}
-                </li>
-              ))}
-            </ul>
+            <p className="placeholder-text">Please select a location in the structural view to display assets.</p>
           ) : (
-            <p className="error-text">No systems available for this location.</p>
+            <div className="navigator-tree">
+              
+              {/* Grouped Equipment Categories */}
+              {Object.keys(groupedEquipment).map(categoryName => {
+                const equipments = groupedEquipment[categoryName];
+                const isExpanded = expandedGroups[categoryName] !== false; // expanded by default
+                
+                return (
+                  <div key={categoryName} className="tree-group">
+                    <div 
+                      className="tree-group-header"
+                      onClick={() => setExpandedGroups(prev => ({ ...prev, [categoryName]: !isExpanded }))}
+                    >
+                      <span className="tree-chevron">
+                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      </span>
+                      <Folder size={14} className="tree-icon icon-yellow" />
+                      <span className="tree-group-title">{categoryName}</span>
+                      <span className="tree-badge">{equipments.length}</span>
+                    </div>
+
+                    {isExpanded && (
+                      <ul className="tree-leaves">
+                        {equipments.map(eq => (
+                          <li
+                            key={eq.equipmentKey}
+                            className={`tree-leaf ${selectedEquipmentKey === eq.equipmentKey ? 'active' : ''}`}
+                            onClick={() => handleEquipmentClick(eq.equipmentKey!)}
+                          >
+                            <Cpu size={13} className="tree-leaf-icon" />
+                            <span className="tree-leaf-name">{eq.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Systems Group */}
+              <div className="tree-group">
+                {(() => {
+                  const isExpanded = expandedGroups['Systems'] !== false; // expanded by default
+                  
+                  return (
+                    <>
+                      <div 
+                        className="tree-group-header"
+                        onClick={() => setExpandedGroups(prev => ({ ...prev, Systems: !isExpanded }))}
+                      >
+                        <span className="tree-chevron">
+                          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        </span>
+                        <Layers size={14} className="tree-icon icon-blue" />
+                        <span className="tree-group-title">Systems</span>
+                        <span className="tree-badge">{filteredSystems.length}</span>
+                      </div>
+
+                      {isExpanded && (
+                        <ul className="tree-leaves">
+                          {filteredSystems.map(sys => (
+                            <li
+                              key={sys.systemKey}
+                              className={`tree-leaf ${selectedSystemKey === sys.systemKey ? 'active' : ''}`}
+                              onClick={() => handleSystemClick(sys.systemKey!)}
+                            >
+                              <Activity size={13} className="tree-leaf-icon" />
+                              <span className="tree-leaf-name">{sys.name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+
+              {Object.keys(groupedEquipment).length === 0 && filteredSystems.length === 0 && (
+                <p className="no-data-text">No equipment or systems found for this location.</p>
+              )}
+
+            </div>
           )}
         </aside>
 
-        {/*Center Canvas Column: Active RT Page View */}
+        {/* Center Canvas Column: Active Telemetry View */}
         <main className="panel rt-page-view">
-          <h3>RT Page View</h3>
+          <h3>Telemetry & Live Data View</h3>
           
           {activeMiddleView === 'locationManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
-              <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
-                <h4 style={{ marginTop: 0 }}>🏢 Location Manager</h4>
-                <p style={{ color: '#64748b', fontSize: '13px' }}>Location configuration and hierarchical tree forms will render here.</p>
+              <button onClick={() => setActiveMiddleView('liveData')} className="btn-back">← Back to Live View</button>
+              <div className="manager-fallback-card">
+                <h4>🏢 Location Manager</h4>
+                <p>Location configuration and hierarchical tree forms render here.</p>
               </div>
             </div>
           )}
 
           {activeMiddleView === 'equipmentManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
+              <button onClick={() => setActiveMiddleView('liveData')} className="btn-back">← Back to Live View</button>
               <EquipmentManager />
             </div>
           )}
 
           {activeMiddleView === 'systemManager' && (
             <div>
-              <button onClick={() => setActiveMiddleView('liveData')} style={{ marginBottom: '15px', background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>← Back to Live View</button>
-              <div style={{ padding: '20px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
-                <h4 style={{ marginTop: 0 }}>⚙️ System Manager</h4>
-                <p style={{ color: '#64748b', fontSize: '13px' }}>Automation subsystem loops and logical network tags will render here.</p>
+              <button onClick={() => setActiveMiddleView('liveData')} className="btn-back">← Back to Live View</button>
+              <div className="manager-fallback-card">
+                <h4>⚙️ System Manager</h4>
+                <p>Automation subsystem loops and logical network tags render here.</p>
               </div>
             </div>
           )}
@@ -213,113 +405,183 @@ const Dashboard: React.FC = () => {
             <div className="rt-content-box">
               {selectedLocation && selectedLocationData ? (
                 <div>
-                  <p style={{ fontWeight: '600', color: '#334155', margin: '0 0 15px 0' }}>
-                    Currently Selected Location: <span style={{ color: '#2563eb' }}>{selectedLocationData.fullName}</span>
-                  </p>
                   
-                  {selectedSystem ? (
-                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '12px', color: '#fff', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                        <div>
-                          <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Cpu size={20} className="text-primary-400" />
-                            {selectedSystem.name} Live Telemetry
+                  {selectedEquipment ? (
+                    <div className="telemetry-section animate-fade-in">
+                      
+                      {/* Telemetry Header Banner */}
+                      <div className="telemetry-banner">
+                        <div className="banner-details">
+                          <h4 className="banner-title">
+                            <Cpu size={22} className="banner-icon icon-primary" />
+                            {selectedEquipment.name} Telemetry
                           </h4>
-                          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>
-                            Monitoring logical control tags for {selectedLocationData.locationName}
-                          </p>
+                          <div className="banner-metadata">
+                            <span className="meta-badge">Type: {selectedEquipment.equipmentCategory?.category || 'General'}</span>
+                            <span className="meta-badge">Location: {selectedLocationData.locationName}</span>
+                          </div>
+                          {selectedEquipment.description && (
+                            <p className="banner-description">{selectedEquipment.description}</p>
+                          )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '700', backgroundColor: 'rgba(255,255,255,0.08)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
-                          LIVE FEED
+                        <div className="banner-status">
+                          <span className="pulse-dot bg-emerald-500"></span>
+                          <span className="status-label">LIVE STREAM</span>
                         </div>
                       </div>
 
-                      {!selectedSystem.systemPoints || selectedSystem.systemPoints.length === 0 ? (
-                        <div style={{ padding: '60px 20px', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: '12px', color: '#64748b', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                          <Activity size={32} className="text-slate-300" />
+                      {/* Points Grid */}
+                      {activePoints.length === 0 ? (
+                        <div className="empty-points-panel">
+                          <Activity size={32} className="text-slate-300 animate-pulse" />
                           <div>
-                            <p style={{ margin: 0, fontWeight: '700', color: '#334155' }}>No points mapped to this system</p>
-                            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b' }}>
-                              Go to the Systems configuration page to map physical equipment points to this system.
+                            <p className="empty-title">No Telemetry Mapped</p>
+                            <p className="empty-subtitle">
+                              This device has no active hardware points. Map points via Equipment configurations.
                             </p>
                           </div>
                         </div>
                       ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-                          {selectedSystem.systemPoints.map((sp) => {
-                            const val = simulatedValues[sp.pointKey];
-                            const isTemp = sp.point?.name?.toLowerCase().includes('temp') || sp.point?.address?.toLowerCase().includes('temp');
-                            const isHumid = sp.point?.name?.toLowerCase().includes('humid') || sp.point?.address?.toLowerCase().includes('humid');
-                            const isStatus = sp.point?.name?.toLowerCase().includes('status') || sp.point?.name?.toLowerCase().includes('run');
+                        <div className="points-grid">
+                          {activePoints.map((p) => {
+                            const sim = simulatedValues[p.pointKey!];
+                            const val = sim ? sim.value : '--';
+                            const trend = sim ? sim.trend : 'stable';
                             
-                            let valStr = val !== undefined ? String(val) : '--';
-                            if (val !== undefined && typeof val === 'number') {
+                            const isTemp = p.name.toLowerCase().includes('temp') || (p.address || '').toLowerCase().includes('temp');
+                            const isHumid = p.name.toLowerCase().includes('humid') || (p.address || '').toLowerCase().includes('humid');
+                            const isStatus = p.name.toLowerCase().includes('status') || p.name.toLowerCase().includes('run') || p.name.toLowerCase().includes('state') || p.name.toLowerCase().includes('mode') || p.name.toLowerCase().includes('enable');
+                            
+                            let valStr = String(val);
+                            if (typeof val === 'number') {
                               if (isTemp) valStr += ' °C';
                               else if (isHumid) valStr += ' %';
                             }
 
-                            const colorIndex = (sp.pointKey % 4);
-                            const gradients = [
-                              'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', // Blue
-                              'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', // Emerald
-                              'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)', // Pink
-                              'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)'  // Purple
-                            ];
-                            const borderColors = ['#bfdbfe', '#a7f3d0', '#fbcfe8', '#e9d5ff'];
-                            const textColors = ['#1d4ed8', '#047857', '#be185d', '#7e22ce'];
-
                             return (
-                              <div
-                                key={sp.sysPointKey}
-                                style={{
-                                  background: gradients[colorIndex],
-                                  border: `1px solid ${borderColors[colorIndex]}`,
-                                  borderRadius: '12px',
-                                  padding: '16px',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: '12px',
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-                                  textAlign: 'left'
-                                }}
-                              >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                                  <div>
-                                    <h5 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
-                                      {sp.point?.name}
-                                    </h5>
-                                    <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#64748b', fontWeight: '600' }}>
-                                      {allPoints.find(ap => ap.pointKey === sp.pointKey)?.equipment?.name || 'Equipment'}
-                                    </p>
+                              <div key={`${p.pointKey}-${val}`} className="point-card animate-card-update">
+                                <div className="card-top">
+                                  <div className="card-info">
+                                    <h5 className="point-title">{p.name}</h5>
+                                    <span className="point-address">{p.address || 'No Address'}</span>
                                   </div>
-                                  <div style={{ color: textColors[colorIndex], background: 'rgba(255,255,255,0.6)', padding: '6px', borderRadius: '8px' }}>
-                                    {isTemp ? <Thermometer size={16} /> : <Activity size={16} />}
+                                  <div className="card-badges">
+                                    <span className="online-tag">
+                                      <span className="pulse-dot-small bg-emerald-400"></span>
+                                      Online
+                                    </span>
                                   </div>
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
-                                  <div>
-                                    <span style={{ fontSize: '10px', color: '#94a3b8', background: '#fff', border: '1px solid rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px', fontWeight: '700', fontFamily: 'monospace' }}>
-                                      {sp.point?.address || 'No Address'}
-                                    </span>
-                                  </div>
-                                  <div
-                                    style={{
-                                      fontSize: '24px',
-                                      fontWeight: '900',
-                                      color: isStatus && val === 'STOPPED' ? '#ef4444' : '#0f172a',
-                                      letterSpacing: '-0.025em'
-                                    }}
-                                  >
+                                <div className="card-bottom">
+                                  <div className="value-display">
                                     {isStatus ? (
-                                      <span style={{ fontSize: '12px', fontWeight: '800', padding: '4px 8px', borderRadius: '6px', backgroundColor: val === 'RUNNING' ? '#d1fae5' : '#fee2e2', color: val === 'RUNNING' ? '#065f46' : '#991b1b' }}>
+                                      <span className={`status-pill ${val === 'RUNNING' || val === 'ON' || val === 'AUTO' ? 'on' : 'off'}`}>
                                         {valStr}
                                       </span>
                                     ) : (
-                                      valStr
+                                      <span className="value-numeric">{valStr}</span>
                                     )}
                                   </div>
+
+                                  {!isStatus && trend !== 'stable' && (
+                                    <div className={`trend-badge ${trend}`}>
+                                      {trend === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : selectedSystem ? (
+                    <div className="telemetry-section animate-fade-in">
+                      
+                      {/* Telemetry Header Banner */}
+                      <div className="telemetry-banner banner-system">
+                        <div className="banner-details">
+                          <h4 className="banner-title">
+                            <Layers size={22} className="banner-icon icon-secondary" />
+                            {selectedSystem.name} System Telemetry
+                          </h4>
+                          <div className="banner-metadata">
+                            <span className="meta-badge">Type: System Loop</span>
+                            <span className="meta-badge">Location: {selectedLocationData.locationName}</span>
+                          </div>
+                          {selectedSystem.description && (
+                            <p className="banner-description">{selectedSystem.description}</p>
+                          )}
+                        </div>
+                        <div className="banner-status">
+                          <span className="pulse-dot bg-emerald-500"></span>
+                          <span className="status-label">LIVE STREAM</span>
+                        </div>
+                      </div>
+
+                      {/* Points Grid */}
+                      {activePoints.length === 0 ? (
+                        <div className="empty-points-panel">
+                          <Activity size={32} className="text-slate-300 animate-pulse" />
+                          <div>
+                            <p className="empty-title">No associated system points</p>
+                            <p className="empty-subtitle">
+                              This control system loop contains no points. Map points via System configs.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="points-grid">
+                          {activePoints.map((p) => {
+                            const sim = simulatedValues[p.pointKey!];
+                            const val = sim ? sim.value : '--';
+                            const trend = sim ? sim.trend : 'stable';
+                            
+                            const isTemp = p.name.toLowerCase().includes('temp') || (p.address || '').toLowerCase().includes('temp');
+                            const isHumid = p.name.toLowerCase().includes('humid') || (p.address || '').toLowerCase().includes('humid');
+                            const isStatus = p.name.toLowerCase().includes('status') || p.name.toLowerCase().includes('run') || p.name.toLowerCase().includes('state') || p.name.toLowerCase().includes('mode') || p.name.toLowerCase().includes('enable');
+                            
+                            let valStr = String(val);
+                            if (typeof val === 'number') {
+                              if (isTemp) valStr += ' °C';
+                              else if (isHumid) valStr += ' %';
+                            }
+
+                            const sourceEq = allEquipment.find(eq => eq.equipmentKey === p.equipmentKey)?.name || 'Equipment';
+
+                            return (
+                              <div key={`${p.pointKey}-${val}`} className="point-card system-point animate-card-update">
+                                <div className="card-top">
+                                  <div className="card-info">
+                                    <h5 className="point-title">{p.name}</h5>
+                                    <span className="point-source-device">Source: {sourceEq}</span>
+                                    <span className="point-address">{p.address || 'No Address'}</span>
+                                  </div>
+                                  <div className="card-badges">
+                                    <span className="online-tag">
+                                      <span className="pulse-dot-small bg-emerald-400"></span>
+                                      Online
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="card-bottom">
+                                  <div className="value-display">
+                                    {isStatus ? (
+                                      <span className={`status-pill ${val === 'RUNNING' || val === 'ON' || val === 'AUTO' ? 'on' : 'off'}`}>
+                                        {valStr}
+                                      </span>
+                                    ) : (
+                                      <span className="value-numeric">{valStr}</span>
+                                    )}
+                                  </div>
+
+                                  {!isStatus && trend !== 'stable' && (
+                                    <div className={`trend-badge ${trend}`}>
+                                      {trend === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -328,32 +590,39 @@ const Dashboard: React.FC = () => {
                       )}
                     </div>
                   ) : (
-                    <div style={{ padding: '60px 20px', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: '12px', color: '#64748b', textAlign: 'center', marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                      <Cpu size={32} className="text-slate-300" />
-                      <div>
-                        <p style={{ margin: 0, fontWeight: '700', color: '#334155' }}>Select an automation system</p>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b' }}>
-                          Please select one of the automation systems from the Subsystem Navigator on the left to monitor live point values.
-                        </p>
-                      </div>
+                    // Dashboard Default State (Location Selected, No Element Selected)
+                    <div className="empty-selection-placeholder">
+                      <Cpu size={56} className="text-primary-400 animate-bounce" />
+                      <h4>Select an Asset or System</h4>
+                      <p>
+                        Explore the structural hierarchy nodes of {selectedLocationData.locationName} using the Navigator on the left. Click on any equipment or system loop to monitor its telemetry tags.
+                      </p>
                     </div>
                   )}
+
                 </div>
               ) : (
-                <p className="placeholder-text" style={{ margin: 0 }}>Please select a location from the right panel to view live equipment data.</p>
+                // Initial State: No Location Selected
+                <div className="empty-location-placeholder animate-pulse">
+                  <MapPin size={56} className="text-slate-300" />
+                  <h4>Select structural location context</h4>
+                  <p>
+                    Choose a physical location branch from the Structural Tree view on the right to navigate its control nodes.
+                  </p>
+                </div>
               )}
             </div>
           )}
         </main>
 
-        {/*Right Column: Location Hierarchical Navigation Tree */}
+        {/* Right Column: Location Hierarchical Navigation Tree */}
         <aside className="panel location-navigator">
-          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '15px' }}>Structural View</h3>
+          <h3>Structural Tree</h3>
           <StructuralDashboard 
-            key={JSON.stringify(locations)} // Forces layout refresh smoothly inside browser whenever server inventory resets
-            items={locations} // Injects live dynamic array list straight down into tree branch configurations
-            selectedId={selectedLocation} // Highlights currently active golden state matching parameter
-            onSelect={handleLocationClick} // Triggers live sub-system rendering seamlessly upon column select clicks
+            key={JSON.stringify(locations)}
+            items={locations}
+            selectedId={selectedLocation}
+            onSelect={handleLocationClick}
           />
         </aside>
 
