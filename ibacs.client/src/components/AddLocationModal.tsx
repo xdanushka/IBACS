@@ -71,22 +71,30 @@ const AddLocationModal = ({ isOpen, onClose, onSuccess, initialData }: AddLocati
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that a location type is selected
     if (formData.locationTypeKey === 0) {
       setError('Please select a location type.');
       return;
     }
+    
     setLoading(true);
-    setError(null);
+    setError(null); // Reset error state
 
     try {
       if (initialData?.locationKey) {
+        // Update existing location
         await locationService.updateLocation(initialData.locationKey, formData);
       } else {
+        // Add new location
         await locationService.addLocation(formData);
       }
+      
+      // On success, close the modal and trigger the parent success callback
       onSuccess();
       onClose();
     } catch (err: any) {
+      // Catch and display error message from the backend or fallback
       setError(err.response?.data?.message || `Failed to ${initialData ? 'update' : 'add'} location. Please try again.`);
     } finally {
       setLoading(false);
@@ -127,7 +135,10 @@ const AddLocationModal = ({ isOpen, onClose, onSuccess, initialData }: AddLocati
             <Input
               placeholder="e.g. Building A, Floor 1, Conference Room"
               value={formData.locationName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, locationName: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setFormData({ ...formData, locationName: e.target.value });
+                if (error) setError(null); // Clear error on change
+              }}
               required
               className="h-12 text-lg font-medium"
             />
@@ -139,7 +150,10 @@ const AddLocationModal = ({ isOpen, onClose, onSuccess, initialData }: AddLocati
               <select
                 className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"
                 value={formData.locationTypeKey}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, locationTypeKey: parseInt(e.target.value) })}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setFormData({ ...formData, locationTypeKey: parseInt(e.target.value) });
+                  if (error) setError(null); // Clear error on change
+                }}
                 required
               >
                 <option value={0} disabled>Select a type...</option>

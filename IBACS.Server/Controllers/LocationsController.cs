@@ -60,11 +60,28 @@ namespace IBACS.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<Location>> PostLocation(Location location)
         {
-            location.FullName = await CalculateFullName(location);
-            _context.Locations.Add(location);
-            await _context.SaveChangesAsync();
+            // Check if a location with the same name already exists to prevent duplicates
+            bool exists = await _context.Locations.AnyAsync(l => l.LocationName == location.LocationName);
+            if (exists)
+            {
+                return BadRequest(new { message = "A location with this name already exists. Please choose a different name." });
+            }
 
-            return CreatedAtAction(nameof(GetLocation), new { id = location.LocationKey }, location);
+            try
+            {
+                // Calculate full name based on hierarchy
+                location.FullName = await CalculateFullName(location);
+                _context.Locations.Add(location);
+                await _context.SaveChangesAsync();
+
+                // Return Ok to avoid circular reference issues with CreatedAtAction
+                return Ok(location);
+            }
+            catch (Exception ex)
+            {
+                // Log and return 500 error if something goes wrong
+                return StatusCode(500, new { message = "An error occurred while saving the location.", details = ex.Message });
+            }
         }
 
         // PUT: api/Locations/5
@@ -85,6 +102,7 @@ namespace IBACS.Server.Controllers
                 return NotFound();
             }
 
+            // Check if hierarchy path changed
             bool pathChanged = existingLocation.LocationName != location.LocationName || 
                               existingLocation.ParentLocationKey != location.ParentLocationKey;
 
@@ -94,6 +112,7 @@ namespace IBACS.Server.Controllers
             
             if (pathChanged)
             {
+                // Update children names if hierarchy changes
                 existingLocation.FullName = await CalculateFullName(existingLocation);
                 await UpdateChildrenFullNames(existingLocation);
             }
@@ -132,11 +151,13 @@ namespace IBACS.Server.Controllers
                 return NotFound();
             }
 
+            // Prevent deletion if child locations exist
             if (location.ChildLocations.Any())
             {
                 return BadRequest(new { message = "Cannot delete this location because it contains sub-locations (children). Please delete or move the sub-locations first." });
             }
 
+            // Prevent deletion if equipment or systems are assigned
             if (location.Equipments.Any() || location.Systems.Any())
             {
                 return BadRequest(new { message = "Cannot delete this location because it has equipment or systems assigned to it. Please remove them first." });
@@ -153,6 +174,7 @@ namespace IBACS.Server.Controllers
             return _context.Locations.Any(e => e.LocationKey == id);
         }
 
+        // Helper method to build location hierarchy path string
         private async Task<string> CalculateFullName(Location location)
         {
             if (location.ParentLocationKey == null)
@@ -169,6 +191,7 @@ namespace IBACS.Server.Controllers
             return $"{parent.FullName}. {location.LocationName}";
         }
 
+        // Recursive method to update names of all children when parent changes
         private async Task UpdateChildrenFullNames(Location parent)
         {
             var children = await _context.Locations
