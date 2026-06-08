@@ -49,7 +49,7 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }: ModalP
       <div 
         ref={modalRef}
         className={cn(
-          'relative w-full rounded-xl bg-white shadow-2xl transition-all transform animate-in fade-in zoom-in duration-200',
+          'relative w-full rounded-xl bg-white shadow-2xl transition-all transform',
           sizes[size]
         )}
       >
