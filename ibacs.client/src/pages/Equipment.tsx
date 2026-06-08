@@ -71,7 +71,7 @@ const EquipmentPage = () => {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex flex-col gap-2">
@@ -157,7 +157,7 @@ const EquipmentPage = () => {
       </div>
 
       {/* Tables Context */}
-      <div className="animate-in slide-in-from-top-4 duration-500">
+      <div>
         {activeTab === 'equipment' ? (
           <EquipmentTable
             equipment={filteredEquipment || []}

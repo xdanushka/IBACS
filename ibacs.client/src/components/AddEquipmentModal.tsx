@@ -121,7 +121,7 @@ const AddEquipmentModal = ({ isOpen, onClose, onSuccess, initialData }: AddEquip
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-300">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {error && (
           <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100 flex items-center gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-red-600" />
