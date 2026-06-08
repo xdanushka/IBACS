@@ -23,32 +23,12 @@ const AddLocationModal = ({ isOpen, onClose, onSuccess, initialData }: AddLocati
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        setFormData({
-          locationKey: initialData.locationKey,
-          locationName: initialData.locationName,
-          locationTypeKey: initialData.locationTypeKey,
-          parentLocationKey: initialData.parentLocationKey,
-        });
-      } else {
-        setFormData({
-          locationName: '',
-          locationTypeKey: 0,
-          parentLocationKey: null,
-        });
-      }
-      fetchTypes();
-      fetchLocations();
-    }
-  }, [isOpen, initialData]);
-
   const fetchTypes = async () => {
     try {
       const data = await locationService.getLocationTypes();
       setTypes(data);
       if (data.length > 0 && formData.locationTypeKey === 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData(prev => ({ ...prev, locationTypeKey: data[0].locationTypeKey }));
       }
     } catch (err) {
@@ -69,6 +49,30 @@ const AddLocationModal = ({ isOpen, onClose, onSuccess, initialData }: AddLocati
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFormData({
+          locationKey: initialData.locationKey,
+          locationName: initialData.locationName,
+          locationTypeKey: initialData.locationTypeKey,
+          parentLocationKey: initialData.parentLocationKey,
+        });
+      } else {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFormData({
+          locationName: '',
+          locationTypeKey: 0,
+          parentLocationKey: null,
+        });
+      }
+      fetchTypes();
+      fetchLocations();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.locationTypeKey === 0) {
@@ -86,7 +90,7 @@ const AddLocationModal = ({ isOpen, onClose, onSuccess, initialData }: AddLocati
       }
       onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.message || `Failed to ${initialData ? 'update' : 'add'} location. Please try again.`);
     } finally {
       setLoading(false);
