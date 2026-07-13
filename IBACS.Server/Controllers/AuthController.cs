@@ -4,7 +4,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBACS.Server.Controllers
@@ -46,7 +45,7 @@ namespace IBACS.Server.Controllers
         // Authenticate user and return JWT token
         [AllowAnonymous]
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginModel loginData)
+        public async Task<IActionResult> Login([FromBody] LoginModel loginData)
         {
             if (loginData == null || string.IsNullOrEmpty(loginData.Username))
                 return BadRequest(new { message = "Invalid input." });
