@@ -138,7 +138,7 @@ const ProfileDropdown = () => {
               </div>
             ) : (
               <>
-                <div className="mb-3"><p className="font-semibold text-sm">👤 Name</p><p className="text-slate-600 text-sm">{profile.name}</p></div>
+                <div className="mb-3"><p className="font-semibold text-sm">👤 Name</p><p className="text-slate-600 text-sm">{profile.name || '-'}</p></div>
                 <div className="mb-3"><p className="font-semibold text-sm">💼 Position</p><p className="text-slate-600 text-sm">{profile.position || '-'}</p></div>
                 <div className="mb-3"><p className="font-semibold text-sm">🏢 Company</p><p className="text-slate-600 text-sm">{profile.company || '-'}</p></div>
                 <div><p className="font-semibold text-sm">📞 Contact Number</p><p className="text-slate-600 text-sm">{profile.contactNumber || '-'}</p></div>
