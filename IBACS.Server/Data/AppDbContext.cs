@@ -17,6 +17,7 @@ namespace IBACS.Server.Data
         public DbSet<RTPage> RTPages { get; set; }
         public DbSet<Point> Points { get; set; }
         public DbSet<SystemPoint> SystemPoints { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
