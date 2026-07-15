@@ -76,7 +76,7 @@ const EquipmentPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-600 rounded-xl text-white shadow-lg shadow-emerald-100">
+            <div className="p-2 bg-primary-600 rounded-xl text-white shadow-lg shadow-primary-100">
               {activeTab === 'equipment' ? <Cpu size={24} strokeWidth={2.5} /> : <Layers size={24} strokeWidth={2.5} />}
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -102,7 +102,7 @@ const EquipmentPage = () => {
           {activeTab === 'equipment' ? (
             <Button
               onClick={() => { setEditingEquipment(null); setIsModalOpen(true); }}
-              className="flex-1 md:flex-none gap-2 px-6 py-4 rounded-xl shadow-xl shadow-emerald-100 hover:shadow-2xl hover:shadow-emerald-200 font-bold tracking-tight text-lg bg-emerald-600 hover:bg-emerald-700 text-white border-0"
+              className="flex-1 md:flex-none gap-2 px-6 py-4 rounded-xl shadow-xl shadow-primary-100 hover:shadow-2xl hover:shadow-primary-200 font-bold tracking-tight text-lg bg-primary-600 hover:bg-primary-700 text-white border-0"
             >
               <Plus size={24} strokeWidth={3} />
               Add Equipment
@@ -110,7 +110,7 @@ const EquipmentPage = () => {
           ) : (
             <Button
               onClick={() => setIsCategoryModalOpen(true)}
-              className="flex-1 md:flex-none gap-2 px-6 py-4 rounded-xl shadow-xl shadow-emerald-100 hover:shadow-2xl hover:shadow-emerald-200 font-bold tracking-tight text-lg bg-emerald-700 hover:bg-emerald-800 text-white border-0"
+              className="flex-1 md:flex-none gap-2 px-6 py-4 rounded-xl shadow-xl shadow-primary-100 hover:shadow-2xl hover:shadow-primary-200 font-bold tracking-tight text-lg bg-primary-700 hover:bg-primary-800 text-white border-0"
             >
               <Plus size={24} strokeWidth={3} />
               Add Category
@@ -124,7 +124,7 @@ const EquipmentPage = () => {
         <button
           onClick={() => { setActiveTab('equipment'); setSearchQuery(''); }}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'equipment'
-              ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200 scale-100'
+              ? 'bg-white text-primary-600 shadow-lg shadow-slate-200 scale-100'
               : 'text-slate-500 hover:text-slate-700 hover:bg-white/50 scale-95 opacity-70'
             }`}
         >
@@ -134,7 +134,7 @@ const EquipmentPage = () => {
         <button
           onClick={() => { setActiveTab('categories'); setSearchQuery(''); }}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'categories'
-              ? 'bg-white text-emerald-600 shadow-lg shadow-slate-200 scale-100'
+              ? 'bg-white text-primary-600 shadow-lg shadow-slate-200 scale-100'
               : 'text-slate-500 hover:text-slate-700 hover:bg-white/50 scale-95 opacity-70'
             }`}
         >
@@ -146,10 +146,10 @@ const EquipmentPage = () => {
       {/* Search Bar */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={18} />
           <Input
             placeholder={activeTab === 'equipment' ? 'Search by name, description, category or location...' : 'Search categories...'}
-            className="pl-12 h-12 rounded-xl bg-white border-slate-200 group-hover:border-emerald-200 focus:ring-emerald-500/20 text-base font-medium shadow-sm"
+            className="pl-12 h-12 rounded-xl bg-white border-slate-200 group-hover:border-primary-200 focus:ring-primary-500/20 text-base font-medium shadow-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

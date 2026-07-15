@@ -10,8 +10,8 @@ const EquipmentCategoryTable = ({ categories, loading }: EquipmentCategoryTableP
   if (loading && categories.length === 0) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-dashed border-slate-200 animate-pulse transition-all">
-        <div className="bg-emerald-100 p-3 rounded-full">
-          <Layers className="text-emerald-500 animate-bounce" size={32} />
+        <div className="bg-primary-100 p-3 rounded-full">
+          <Layers className="text-primary-500 animate-bounce" size={32} />
         </div>
         <p className="text-slate-500 font-medium tracking-tight">Fetching equipment categories...</p>
       </div>
@@ -38,13 +38,13 @@ const EquipmentCategoryTable = ({ categories, loading }: EquipmentCategoryTableP
                 </tr>
               ) : (
                 categories.map((cat) => (
-                  <tr key={cat.equipmentCategoryKey} className="group hover:bg-emerald-50/20 transition-all duration-200 cursor-default">
-                    <td className="px-6 py-4 text-sm font-mono font-bold text-slate-400 group-hover:text-emerald-600 transition-colors">
+                  <tr key={cat.equipmentCategoryKey} className="group hover:bg-primary-50/20 transition-all duration-200 cursor-default">
+                    <td className="px-6 py-4 text-sm font-mono font-bold text-slate-400 group-hover:text-primary-600 transition-colors">
                       #{cat.equipmentCategoryKey}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center text-slate-400 group-hover:text-primary-600 transition-colors">
                           <Layers size={16} />
                         </div>
                         <span className="text-sm font-semibold text-slate-900 group-hover:translate-x-0.5 transition-transform">

@@ -31,8 +31,8 @@ const EquipmentDetails = () => {
   if (loading) {
     return (
       <div className="w-full h-96 flex flex-col items-center justify-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-dashed border-slate-200 animate-pulse transition-all">
-        <div className="bg-emerald-100 p-4 rounded-full">
-          <Cpu className="text-emerald-600 animate-bounce" size={40} />
+        <div className="bg-primary-100 p-4 rounded-full">
+          <Cpu className="text-primary-600 animate-bounce" size={40} />
         </div>
         <p className="text-slate-500 font-semibold text-lg">Loading equipment details...</p>
       </div>
@@ -42,7 +42,7 @@ const EquipmentDetails = () => {
   if (error || !equipment) {
     return (
       <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
-        <Link to="/equipment" className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold transition-colors text-sm">
+        <Link to="/equipment" className="inline-flex items-center gap-2 text-slate-500 hover:text-primary-600 font-bold transition-colors text-sm">
           <ArrowLeft size={16} strokeWidth={2.5} />
           Back to Equipment
         </Link>
@@ -56,7 +56,7 @@ const EquipmentDetails = () => {
           </p>
           <Link
             to="/equipment"
-            className="inline-flex h-10 px-6 font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl items-center justify-center shadow-lg shadow-emerald-100 transition-all border-0"
+            className="inline-flex h-10 px-6 font-bold bg-primary-600 hover:bg-primary-700 text-white rounded-xl items-center justify-center shadow-lg shadow-primary-100 transition-all border-0"
           >
             Return to Assets
           </Link>
@@ -70,14 +70,14 @@ const EquipmentDetails = () => {
       {/* Header back button */}
       <Link 
         to="/equipment" 
-        className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold transition-colors text-sm group"
+        className="inline-flex items-center gap-2 text-slate-500 hover:text-primary-600 font-bold transition-colors text-sm group"
       >
         <ArrowLeft size={16} strokeWidth={2.5} className="group-hover:-translate-x-1 transition-transform" />
         Back to Equipment List
       </Link>
 
       {/* Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-700 p-8 md:p-10 shadow-2xl shadow-emerald-100">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-600 to-blue-700 p-8 md:p-10 shadow-2xl shadow-primary-100">
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
         <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
         
@@ -105,7 +105,7 @@ const EquipmentDetails = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 space-y-6">
             <h3 className="text-lg font-extrabold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Server size={18} className="text-emerald-500" />
+              <Server size={18} className="text-primary-500" />
               Equipment Information
             </h3>
             
@@ -123,7 +123,7 @@ const EquipmentDetails = () => {
               <div className="space-y-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Location</span>
                 <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
-                  <MapPin size={15} className="text-emerald-500" />
+                  <MapPin size={15} className="text-primary-500" />
                   {equipment.location?.fullName || equipment.location?.locationName || `Location ${equipment.locationKey}`}
                 </div>
               </div>
@@ -144,7 +144,7 @@ const EquipmentDetails = () => {
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
-                <Activity size={18} className="text-emerald-500" />
+                <Activity size={18} className="text-primary-500" />
                 Configured System Points
               </h3>
               <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
@@ -175,7 +175,7 @@ const EquipmentDetails = () => {
                     {equipment.points.map((p) => (
                       <tr key={p.pointKey} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-6 py-4 text-slate-800 font-extrabold flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
                           {p.name}
                         </td>
                         <td className="px-6 py-4">

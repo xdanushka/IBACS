@@ -103,8 +103,8 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
   if (loading) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-dashed border-slate-200 animate-pulse transition-all">
-        <div className="bg-emerald-100 p-3 rounded-full">
-          <Cpu className="text-emerald-500 animate-bounce" size={32} />
+        <div className="bg-primary-100 p-3 rounded-full">
+          <Cpu className="text-primary-500 animate-bounce" size={32} />
         </div>
         <p className="text-slate-500 font-medium">Loading hardware equipment...</p>
       </div>
@@ -144,12 +144,12 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
               <>
                 <tr
                   key={eq.equipmentKey}
-                  className="group hover:bg-emerald-50/20 transition-all duration-200 cursor-default"
+                  className="group hover:bg-primary-50/20 transition-all duration-200 cursor-default"
                 >
                   <td className="px-4 py-4 text-center">
                     <button
                       onClick={() => toggleExpand(eq.equipmentKey!)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors focus:outline-none cursor-pointer"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors focus:outline-none cursor-pointer"
                     >
                       {expandedEquipments[eq.equipmentKey!] ? (
                         <ChevronDown size={16} strokeWidth={2.5} />
@@ -160,19 +160,19 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center text-slate-400 group-hover:text-primary-600 transition-colors">
                         <Cpu size={16} />
                       </div>
                       <Link 
                         to={`/equipment/${eq.equipmentKey}`} 
-                        className="text-sm font-semibold text-slate-900 hover:text-emerald-600 hover:underline transition-colors cursor-pointer group-hover:translate-x-0.5 transition-transform"
+                        className="text-sm font-semibold text-slate-900 hover:text-primary-600 hover:underline transition-colors cursor-pointer group-hover:translate-x-0.5 transition-transform"
                       >
                         {eq.name}
                       </Link>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 group-hover:bg-white group-hover:text-emerald-700 group-hover:border-emerald-200 transition-colors">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 group-hover:bg-white group-hover:text-primary-700 group-hover:border-primary-200 transition-colors">
                       <Layers size={12} />
                       {eq.equipmentCategory?.category || `Category ${eq.equipmentCategoryKey}`}
                     </span>
@@ -194,7 +194,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                       <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
                         <Link
                           to={`/equipment/${eq.equipmentKey}`}
-                          className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                          className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-100 rounded-lg transition-colors flex items-center justify-center cursor-pointer"
                           title="View Details"
                         >
                           <Eye size={16} />
@@ -202,7 +202,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors"
+                          className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-100 rounded-lg transition-colors"
                           onClick={() => onEdit(eq)}
                         >
                           <Edit3 size={16} />
@@ -231,7 +231,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                       <div className="bg-slate-50/70 border border-slate-200/85 rounded-xl p-5 space-y-4 shadow-inner">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-primary-500 animate-pulse" />
                             <h4 className="text-sm font-bold text-slate-800">
                               System Points for {eq.name}
                             </h4>
@@ -240,7 +240,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                             <Button
                               variant="outline"
                               size="sm"
-                              className="gap-1 px-3 py-1.5 h-8 font-bold border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 text-emerald-600 rounded-lg text-xs"
+                              className="gap-1 px-3 py-1.5 h-8 font-bold border-slate-200 hover:border-primary-200 hover:bg-primary-50 text-primary-600 rounded-lg text-xs"
                               onClick={() => startAddPoint(eq.equipmentKey!)}
                             >
                               <Plus size={14} strokeWidth={2.5} />
@@ -251,13 +251,13 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
 
                         {/* Inline Add Form */}
                         {addingPointToEquipmentKey === eq.equipmentKey && (
-                          <div className="bg-white border border-emerald-100 rounded-xl p-4 flex flex-col md:flex-row items-end gap-3 shadow-md shadow-emerald-50/50 animate-in slide-in-from-top-2 duration-200">
+                          <div className="bg-white border border-primary-100 rounded-xl p-4 flex flex-col md:flex-row items-end gap-3 shadow-md shadow-primary-50/50 animate-in slide-in-from-top-2 duration-200">
                             <div className="flex-1 w-full space-y-1">
                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Point Name</label>
                               <input
                                 type="text"
                                 placeholder="e.g. Temperature Sensor"
-                                className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                                className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm font-medium focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all"
                                 value={pointName}
                                 onChange={(e) => setPointName(e.target.value)}
                               />
@@ -267,7 +267,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                               <input
                                 type="text"
                                 placeholder="e.g. 40001 or AHU_TEMP"
-                                className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                                className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm font-medium focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all"
                                 value={pointAddress}
                                 onChange={(e) => setPointAddress(e.target.value)}
                               />
@@ -282,7 +282,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                                 Cancel
                               </Button>
                               <Button
-                                className="h-10 px-4 font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 md:flex-none border-0 shadow-lg shadow-emerald-100"
+                                className="h-10 px-4 font-bold text-xs bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex-1 md:flex-none border-0 shadow-lg shadow-primary-100"
                                 onClick={() => handleSavePoint(eq.equipmentKey!)}
                               >
                                 <Check size={14} className="mr-1" strokeWidth={2.5} />
@@ -320,7 +320,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                                           <div className="flex-1 w-full space-y-1">
                                             <input
                                               type="text"
-                                              className="w-full h-8 px-2.5 border border-slate-200 rounded-md text-xs font-medium focus:border-emerald-500 outline-none"
+                                              className="w-full h-8 px-2.5 border border-slate-200 rounded-md text-xs font-medium focus:border-primary-500 outline-none"
                                               value={pointName}
                                               onChange={(e) => setPointName(e.target.value)}
                                             />
@@ -328,7 +328,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                                           <div className="flex-1 w-full space-y-1">
                                             <input
                                               type="text"
-                                              className="w-full h-8 px-2.5 border border-slate-200 rounded-md text-xs font-medium focus:border-emerald-500 outline-none"
+                                              className="w-full h-8 px-2.5 border border-slate-200 rounded-md text-xs font-medium focus:border-primary-500 outline-none"
                                               value={pointAddress}
                                               onChange={(e) => setPointAddress(e.target.value)}
                                             />
@@ -342,7 +342,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                                               Cancel
                                             </Button>
                                             <Button
-                                              className="h-8 px-3 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md border-0"
+                                              className="h-8 px-3 text-[10px] font-bold bg-primary-600 hover:bg-primary-700 text-white rounded-md border-0"
                                               onClick={() => handleUpdatePoint(p.pointKey!, eq.equipmentKey!)}
                                             >
                                               Save
@@ -364,7 +364,7 @@ const EquipmentTable = ({ equipment, loading, onEdit, onDelete, onRefresh }: Equ
                                             <Button
                                               variant="ghost"
                                               size="icon"
-                                              className="h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"
+                                              className="h-7 w-7 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded"
                                               onClick={() => startEditPoint(p)}
                                             >
                                               <Edit3 size={12} />
